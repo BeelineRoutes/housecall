@@ -6,6 +6,7 @@ import (
 
 	//"fmt"
 	"net/url"
+	"net/http"
 	"time"
 )
 
@@ -14,6 +15,12 @@ import (
 //-----------------------------------------------------------------------------------------------------------------------//
 
 const apiURL = "https://api.housecallpro.com"
+
+//----- ERRORS ---------------------------------------------------------------------------------------------------------//
+
+var (
+	ErrInvalidCode 		= errors.New("OAuth code not valid")
+)
 
 
   //-----------------------------------------------------------------------------------------------------------------------//
@@ -29,6 +36,14 @@ type Error struct {
 
 func (this *Error) Err () error {
 	if this == nil { return nil } // no error
+	switch this.StatusCode {
+	case http.StatusUnauthorized:
+		if this.Error == "invalid_grant" { // this is for granting access based on the passed code
+			return errors.Wrap (ErrInvalidCode, this.Description)
+		}
+
+	}
+	// just a default
 	return errors.Errorf ("HouseCall Error : %d : %s : %s", this.StatusCode, this.Error, this.Description)
 }
 

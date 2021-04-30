@@ -24,7 +24,7 @@ clientId := "ca96e4cd990507c2995b9633bd9caa679bee26e99f98572ba54751ab4ff24886" /
 clientSecret := "1fd00f12ab1d3d13c6bf746aa1868bd591af098100d800195b56b6fa97795d73" // your secret
 redirectUrl := "https://your-domain.com" // this can be whatever, you tell House Call what you want when you create your account
 
-hc, err := NewHouseCall (clientId, clientSecret, redirectUrl) // create the hc object
+hc, err := housecall.NewHouseCall (clientId, clientSecret, redirectUrl) // create the hc object
 if err != nil { log.Fatal (err) }
 
 // now you can do something like convert the code you got from the url to a long-lived token and refresh token
