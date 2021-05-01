@@ -4,7 +4,7 @@ package housecall
 import (
 	"github.com/pkg/errors"
 
-	"fmt"
+	//"fmt"
 	"net/url"
 	"net/http"
 	"time"
