@@ -4,10 +4,11 @@ package housecall
 import (
 	"github.com/pkg/errors"
 
-	//"fmt"
+	"fmt"
 	"net/url"
 	"net/http"
 	"time"
+	"encoding/json"
 )
 
   //-----------------------------------------------------------------------------------------------------------------------//
@@ -130,7 +131,7 @@ type Customer struct {
 
 //----- JOBS ---------------------------------------------------------------------------------------------------------//
 
-type Job struct {
+type baseJob struct {
 	Id string `json:"id"`
 	Name string `json:"name"`
 	CustomerId string `json:"customer_id"`
@@ -140,7 +141,6 @@ type Job struct {
 	Note string `json:"note"`
 	Invoice string `json:"invoice_number"`
 	Balance int64 `json:"outstanding_balance"`
-	Date time.Time `json:"scheduled_date"`
 	Description string `json:"description"`
 	Tags struct {
 		Data []string `json:"data"`
@@ -157,11 +157,38 @@ type Job struct {
 	}
 }
 
+type Job struct {
+	baseJob
+	Date time.Time `json:"scheduled_date"`
+}
+
+func (this *Job) UnmarshalJSON (data []byte) error {
+	err := json.Unmarshal (data, &this.baseJob)
+	if err != nil { return err } // this failed
+	
+	// handle the scheduled date
+	var m struct {
+		scheduled_date time.Time
+	}
+
+	err = json.Unmarshal (data, &m)
+	if err == nil {
+		this.Date = m.scheduled_date // just copy this over
+	}
+	
+	return nil // otherwise we're done
+}
+
+type jobListResponse struct {
+	Data struct {
+		Data []Job `json:"data"`
+	} `json:"data"`
+	TotalCount int `json:"total_count"`
+}
 
 //----- PUBLIC ---------------------------------------------------------------------------------------------------------//
 
 type HouseCall struct {
-	
 	clientId, clientSecret, callbackUrl string // for making api calls
 }
 

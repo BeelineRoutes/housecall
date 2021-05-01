@@ -17,8 +17,6 @@ import (
  //----- FUNCTIONS -------------------------------------------------------------------------------------------------------//
 //-----------------------------------------------------------------------------------------------------------------------//
 
-//----- OUATH -------------------------------------------------------------------------------------------------------//
-
 // Takes the passed code we got from the params of the redirect url and converts it to long-live token and refresh token
 func (this *HouseCall) ListJobs (ctx context.Context, token string) ([]Job, error) {
     ret := make([]Job, 0) // main list to return
@@ -26,15 +24,10 @@ func (this *HouseCall) ListJobs (ctx context.Context, token string) ([]Job, erro
     header["Authorization"] = "Bearer " + token 
 
     for i := 1; i <= 10000; i++ { // stay in a loop as long as we're pulling jobs
-        var resp struct {
-            Data struct {
-                Data []Job `json:"data"`
-            } `json:"data"`
-            TotalCount int `json:"total_count"`
-        }
-
+        resp := jobListResponse{}
+        
         errObj, err := this.send (ctx, http.MethodGet, fmt.Sprintf("alpha/jobs?page=%d&page_size=100", i), header, nil, &resp)
-        if err != nil { return nil, err } // bail
+        if err != nil { return nil, errors.WithStack(err) } // bail
         if errObj != nil { return nil, errObj.Err() } // something else bad
 
         // we're here, we're good

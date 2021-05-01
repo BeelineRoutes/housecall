@@ -17,6 +17,7 @@ This will return to your redirect url with a "code" as a url param
 
 import (
     "github.com/BeelineRoutes/housecall"
+    "github.com/pkg/errors" 
     "log"
 )
 
@@ -37,7 +38,17 @@ if len(params["code"]) > 0 && len(params["code"][0]) > 0 {
 }
 
 token, refresh, err := hc.TokensFromCode (context.TODO(), code)
-if err != nil { log.Fatal (err) }
+// handle the error gracefully
+switch errors.Cause (err) {
+case housecall.ErrInvalidCode: // specific error for an invalid/expired code
+    log.Printf ("Code appears invalid, most likely it's expired. %s", err.Error())
+
+case nil:
+    log.Printf ("Code is valid!")
+
+default:
+    log.Fatalf ("Unknown error occured : %s", err.Error())
+}
 
 // token is used as the bearer for future calls
 // refresh can be used to generate a new token when it expires
