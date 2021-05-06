@@ -16,7 +16,7 @@ type testConfig struct {
 	ClientId, ClientSecret, RedirectUrl, OAuthCode, Token string 
 }
 
-func TestModelsError (t *testing.T) {
+func TestHouseCallFirstModelsError (t *testing.T) {
 	var err *Error 
 
 	assert.Equal (t, nil, err.Err(), "nil for a nil object")
@@ -27,7 +27,7 @@ func TestModelsError (t *testing.T) {
 	
 }
 
-func TestModelsOAuthResponse (t *testing.T) {
+func TestHouseCallFirstModelsOAuthResponse (t *testing.T) {
 	resp := oauthResponse {
 		Expires: 1000,
 		Created: 1619557886,
@@ -38,7 +38,7 @@ func TestModelsOAuthResponse (t *testing.T) {
 }
 
 
-func TestModelsNewHouseCall (t *testing.T) {
+func TestHouseCallFirstModelsNewHouseCall (t *testing.T) {
 	_, err := NewHouseCall ("", "", "")
 	
 	assert.NotEqual (t, nil, err, "should have errored")
@@ -59,7 +59,7 @@ func TestModelsNewHouseCall (t *testing.T) {
 
 //----- JOBS -------------------------------------------------------------------------------------------------------//
 
-func TestModelsJobs (t *testing.T) {
+func TestHouseCallFirstModelsJobs (t *testing.T) {
 	resp := jobListResponse{}
 
 	err := json.Unmarshal ([]byte(jobListJson), &resp)

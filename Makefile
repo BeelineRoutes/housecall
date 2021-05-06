@@ -11,8 +11,15 @@ build:
 	clear 
 	@$(GOCMD) test -run TestModelsError ./...
 
-test:
+test-second: build
+test-second:
 	clear
-	@echo "building house call..."
-	@$(GOCMD) test ./...
+	@echo "test housecall second level functions..."
+	@$(GOCMD) test -run TestHouseCallSecond ./...
+
+test-first: build
+test-first:
+	clear
+	@echo "testing housecall primary auth functions..."
+	@$(GOCMD) test -run TestHouseCallFirst ./...
 

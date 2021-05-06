@@ -8,7 +8,6 @@ import (
 	"net/url"
 	"net/http"
 	"time"
-	"encoding/json"
 )
 
   //-----------------------------------------------------------------------------------------------------------------------//
@@ -75,38 +74,29 @@ func (this *oauthResponse) ExpiresAt () time.Time {
 
 //----- PROS ---------------------------------------------------------------------------------------------------------//
 
-type Pro struct {
+type Employee struct {
 	Id string `json:"id"`
 	FirstName string `json:"first_name"`
 	LastName string `json:"last_name"`
 	FullName string `json:"full_name"`
-	Initials string `json:"initials"`
 	Email string `json:"email"`
 	Mobile string `json:"mobile_number"`
-	MessagingId string `json:"messaging_uuid"`
 	Color string `json:"color_hex"`
 	Avatar string `json:"avatar_url"`
-	HasAvatar bool `json:"has_avatar"`
-	OrgName string `json:"organization_name"`
-	Admin bool `json:"is_admin"`
-	Archived bool `json:"is_archived"`
+	Role string `json:"role"`
 }
 
 //----- ADDRESSES ---------------------------------------------------------------------------------------------------------//
 
 type Address struct {
 	Id string `json:"id"`
+	Type string `json:"type"`
 	Street string `json:"street"`
 	Street2 string `json:"street_line_2"`
 	City string `json:"city"`
 	State string `json:"state"`
 	Zip string `json:"zip"`
 	Country string `json:"country"`
-	Lat string `json:"latitude"`
-	Lon string `json:"longitude"`
-	TimeZone string `json:"time_zone"`
-	CustomerId string `json:"customer"`
-	Customer Customer
 }
 
 //----- CUSTOMERS ---------------------------------------------------------------------------------------------------------//
@@ -115,75 +105,43 @@ type Customer struct {
 	Id string `json:"id"`
 	FirstName string `json:"first_name"`
 	LastName string `json:"last_name"`
-	DisplayName string `json:"display_name"`
 	Email string `json:"email"`
 	Mobile string `json:"mobile_number"`
 	Home string `json:"home_number"`
 	Work string `json:"work_number"`
 	Company string `json:"company"`
-	JobTitle string `json:"job_title"`
-	Notes string `json:"notes"`
 	Notifications bool `json:"notifications_enabled"`
-	// addresses
-
+	Tags []string `json:"tags"`
+	Addresses []Address `json:"addresses"`
 }
 
 
 //----- JOBS ---------------------------------------------------------------------------------------------------------//
 
-type baseJob struct {
+type Job struct {
 	Id string `json:"id"`
-	Name string `json:"name"`
 	CustomerId string `json:"customer_id"`
 	Customer Customer
-	AddressId string `json:"address_id"`
-	Address Address
+	Address Address `json:"address"`
 	Note string `json:"note"`
+	WorkStatus string `json:"work_status"`
 	Invoice string `json:"invoice_number"`
 	Balance int64 `json:"outstanding_balance"`
+	Total int64 `json:"total_amount"`
+	Tags []string `json:"tags"`
 	Description string `json:"description"`
-	Tags struct {
-		Data []string `json:"data"`
-	} `json:"tags"`
-	Pros struct {
-		Data[]string `json:"data"`
-	} `json:"pros"`
+	AssignedEmployees [] Employee `json:"assigned_employees"`
 	Schedule struct {
-		Data struct {
-			Start time.Time `json:"start_time"`
-			End time.Time `json:"end_time"`
-			Window int `json:"arrival_window_minutes"`
-		}
+		Start time.Time `json:"scheduled_start"`
+		End time.Time `json:"scheduled_end"`
+		Window int `json:"arrival_window"`
 	}
-}
-
-type Job struct {
-	baseJob
-	Date time.Time `json:"scheduled_date"`
-}
-
-func (this *Job) UnmarshalJSON (data []byte) error {
-	err := json.Unmarshal (data, &this.baseJob)
-	if err != nil { return err } // this failed
-	
-	// handle the scheduled date
-	var m struct {
-		scheduled_date time.Time
-	}
-
-	err = json.Unmarshal (data, &m)
-	if err == nil {
-		this.Date = m.scheduled_date // just copy this over
-	}
-	
-	return nil // otherwise we're done
 }
 
 type jobListResponse struct {
-	Data struct {
-		Data []Job `json:"data"`
-	} `json:"data"`
-	TotalCount int `json:"total_count"`
+	Jobs []Job `json:"jobs"`
+	TotalItmes int `json:"total_items"`
+	TotalPages int `json:"total_pages"`
 }
 
 //----- PUBLIC ---------------------------------------------------------------------------------------------------------//
