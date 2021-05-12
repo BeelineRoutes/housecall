@@ -30,7 +30,7 @@ func newHouseCall (t *testing.T) (*HouseCall, *testConfig) {
 }
 
 
-func TestHouseCallFirst (t *testing.T) {
+func TestSecondHouseCall (t *testing.T) {
 	// read our local config
 	hc, cfg := newHouseCall (t)
 

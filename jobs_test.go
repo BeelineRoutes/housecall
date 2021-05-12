@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-func TestHouseCallSecondJobs (t *testing.T) {
+func TestThirdJobs (t *testing.T) {
 	hc, cfg := newHouseCall (t)
 
 	ctx, cancel := context.WithTimeout (context.Background(), time.Minute) // this should take < 1 minute

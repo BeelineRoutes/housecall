@@ -140,7 +140,7 @@ type Job struct {
 
 type jobListResponse struct {
 	Jobs []Job `json:"jobs"`
-	TotalItmes int `json:"total_items"`
+	TotalItems int `json:"total_items"`
 	TotalPages int `json:"total_pages"`
 }
 
