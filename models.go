@@ -4,7 +4,7 @@ package housecall
 import (
 	"github.com/pkg/errors"
 
-	//"fmt"
+	"fmt"
 	"net/url"
 	"net/http"
 	"time"
@@ -97,6 +97,10 @@ type Address struct {
 	State string `json:"state"`
 	Zip string `json:"zip"`
 	Country string `json:"country"`
+}
+
+func (this Address) ToString() string {
+	return fmt.Sprintf ("%s %s %s, %s  %s", this.Street, this.Street2, this.City, this.State, this.Zip)
 }
 
 //----- CUSTOMERS ---------------------------------------------------------------------------------------------------------//
