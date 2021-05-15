@@ -20,8 +20,10 @@ func TestThirdJobs (t *testing.T) {
 	if err != nil { t.Fatal (err) }
 
 	assert.Equal (t, true, len(jobs) > 0, "expecting at least 1 job")
-	assert.Equal (t, "job_94dec270539c4566be8b11173323ef5f", jobs[0].Id, "target job id")
-
+	assert.NotEqual (t, "", jobs[0].Id, "not filled in")
+	assert.NotEqual (t, "", jobs[0].Customer.Id, "not filled in")
+	assert.NotEqual (t, "", jobs[0].Address.Id, "not filled in")
+	
 	/*
 	for _, j := range jobs {
 		t.Logf ("%+v\n", j)

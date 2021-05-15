@@ -78,12 +78,17 @@ type Employee struct {
 	Id string `json:"id"`
 	FirstName string `json:"first_name"`
 	LastName string `json:"last_name"`
-	FullName string `json:"full_name"`
 	Email string `json:"email"`
 	Mobile string `json:"mobile_number"`
 	Color string `json:"color_hex"`
 	Avatar string `json:"avatar_url"`
 	Role string `json:"role"`
+}
+
+type employeeListResponse struct {
+	Employees []Employee `json:"employees"`
+	TotalItems int `json:"total_items"`
+	TotalPages int `json:"total_pages"`
 }
 
 //----- ADDRESSES ---------------------------------------------------------------------------------------------------------//
