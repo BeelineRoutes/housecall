@@ -147,6 +147,15 @@ type Job struct {
 	}
 }
 
+// returns that the job is in a state where the job is still expected to be completed in the future
+func (this *Job) IsPending () bool {
+	switch this.WorkStatus {
+	case "scheduled", "needs scheduling":
+		return true
+	}
+	return false // this is in a state where the job has been cancelled or already started
+}
+
 type jobListResponse struct {
 	Jobs []Job `json:"jobs"`
 	TotalItems int `json:"total_items"`
