@@ -72,6 +72,20 @@ func (this *oauthResponse) ExpiresAt () time.Time {
 	return time.Unix (this.Created + this.Expires, 0)
 }
 
+//----- COMPANY ---------------------------------------------------------------------------------------------------------//
+
+type Company struct {
+	Id string `json:"id"`
+	PhoneNumber string `json:"phone_number"`
+	Email string `json:"support_email"`
+	Name string `json:"name"`
+	Logo string `json:"logo_url"`
+	Address Address `json:"address"`
+	Website string `json:"website"`
+	DefaultArrivalWindow int `json:"default_arrival_window"`
+	TimeZone string `json:"time_zone"`
+}
+
 //----- PROS ---------------------------------------------------------------------------------------------------------//
 
 type Employee struct {
@@ -102,6 +116,8 @@ type Address struct {
 	State string `json:"state"`
 	Zip string `json:"zip"`
 	Country string `json:"country"`
+	Latitude string `json:"latitude"`
+	Longitude string `json:"longitude"`
 }
 
 func (this Address) ToString() string {
