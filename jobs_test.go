@@ -31,3 +31,42 @@ func TestThirdJobs (t *testing.T) {
 	*/
 }
 
+
+func TestThirdJobScheduleUpdate (t *testing.T) {
+	hc, cfg := newHouseCall (t)
+
+	ctx, cancel := context.WithTimeout (context.Background(), time.Minute) // this should take < 1 minute
+	defer cancel()
+
+	// get our list of jobs, we need one of these to update
+	jobs, err := hc.ListJobs (ctx, cfg.Token, time.Now())
+	if err != nil { t.Fatal (err) }
+
+	if len(jobs) == 0 { t.Fatal ("need at least 1 job to do this test") }
+
+	t.Logf("targing job %s\n", jobs[0].Id)
+
+	// now update the schedule to be something
+	targetDate := time.Now().AddDate (0, 0, 7) // 1 week in the future
+
+	err = hc.UpdateJobSchedule (ctx, cfg.Token, jobs[0].Id, targetDate, time.Minute * 33, time.Minute * 34) // weird things so we know we updated
+	if err != nil { t.Fatal (err) }
+
+	job, err := hc.GetJob (ctx, cfg.Token, jobs[0].Id) // get this job to verify we updated it
+	if err != nil { t.Fatal (err) }
+
+	assert.Equal (t, targetDate.Format("2006-01-02 15:04:05"), job.Schedule.Start.Format("2006-01-02 15:04:05"), "start time")
+	assert.Equal (t, targetDate.Add(time.Minute * 33).Format("2006-01-02 15:04:05"), job.Schedule.End.Format("2006-01-02 15:04:05"), "end time")
+	assert.Equal (t, 34, job.Schedule.Window, "job window")
+
+	// all good, now clear it
+
+	err = hc.UpdateJobSchedule (ctx, cfg.Token, jobs[0].Id, time.Time{}, 0, 0)
+	if err != nil { t.Fatal (err) }
+
+	job, err = hc.GetJob (ctx, cfg.Token, jobs[0].Id) // get this job to verify we updated it
+	if err != nil { t.Fatal (err) }
+
+	assert.Equal (t, true, job.Schedule.Start.IsZero(), "start is zero")
+	assert.Equal (t, true, job.Schedule.End.IsZero(), "end is zero")
+}

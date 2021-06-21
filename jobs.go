@@ -50,3 +50,46 @@ func (this *HouseCall) ListJobs (ctx context.Context, token string, previousDate
     return ret, errors.Errorf ("received over %d jobs in your history", len(ret))
 }
 
+// gets the info about a specific job
+func (this *HouseCall) GetJob (ctx context.Context, token, jobId string) (*Job, error) {
+    header := make(map[string]string)
+    header["Authorization"] = "Bearer " + token 
+
+    job := &Job{}
+    
+    errObj, err := this.send (ctx, http.MethodGet, fmt.Sprintf("jobs/%s", jobId), header, nil, job)
+    if err != nil { return nil, errors.WithStack(err) } // bail
+    if errObj != nil { return nil, errObj.Err() } // something else bad
+
+    // we're here, we're good
+    return job, nil
+}
+
+// sets the new job schedule time
+// if startTime is zero, then this will remove the scheduled time from the job
+func (this *HouseCall) UpdateJobSchedule (ctx context.Context, token, jobId string, startTime time.Time, 
+                                            duration, arrivalWindow time.Duration) error {
+
+    header := make(map[string]string)
+    header["Authorization"] = "Bearer " + token 
+    
+    if startTime.IsZero() {
+        errObj, err := this.send (ctx, http.MethodDelete, fmt.Sprintf("jobs/%s/schedule", jobId), header, nil, nil)
+        if err != nil { return errors.WithStack(err) } // bail
+        if errObj != nil { return errObj.Err() } // something else bad
+
+    } else { // updating
+        schedule := &JobSchedule {
+            Start: startTime,
+            End: startTime.Add (duration),
+            Window: int(arrivalWindow.Minutes()),
+        }
+
+        errObj, err := this.send (ctx, http.MethodPut, fmt.Sprintf("jobs/%s/schedule", jobId), header, schedule, nil)
+        if err != nil { return errors.WithStack(err) } // bail
+        if errObj != nil { return errObj.Err() } // something else bad
+    }
+
+    // we're here, we're good
+    return nil
+}

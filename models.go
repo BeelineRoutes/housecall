@@ -29,9 +29,16 @@ var (
 
 //----- ERRORS ---------------------------------------------------------------------------------------------------------//
 type Error struct {
+	// TODO need to handle the different error objects returned using an overridden unmarshal function
 	Error string `json:"error"`
 	Description string `json:"error_description"`
 	StatusCode int
+	
+	/*
+	Error struct {
+		Message string `json:"message"`
+	} `json:"error"`
+	*/
 }
 
 func (this *Error) Err () error {
@@ -170,6 +177,14 @@ func (this *Job) IsPending () bool {
 		return true
 	}
 	return false // this is in a state where the job has been cancelled or already started
+}
+
+type JobSchedule struct {
+	Start time.Time `json:"start_time"`
+	End time.Time `json:"end_time"`
+	Window int `json:"arrival_window_in_minutes"`
+	Notify bool `json:"notify"`
+	NotifyPro bool `json:"notify_pro"`
 }
 
 type jobListResponse struct {
