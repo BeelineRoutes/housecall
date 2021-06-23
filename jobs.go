@@ -68,7 +68,7 @@ func (this *HouseCall) GetJob (ctx context.Context, token, jobId string) (*Job, 
 // sets the new job schedule time
 // if startTime is zero, then this will remove the scheduled time from the job
 func (this *HouseCall) UpdateJobSchedule (ctx context.Context, token, jobId string, startTime time.Time, 
-                                            duration, arrivalWindow time.Duration) error {
+                                            duration, arrivalWindow time.Duration, notifyCustomer bool) error {
 
     header := make(map[string]string)
     header["Authorization"] = "Bearer " + token 
@@ -83,6 +83,7 @@ func (this *HouseCall) UpdateJobSchedule (ctx context.Context, token, jobId stri
             Start: startTime,
             End: startTime.Add (duration),
             Window: int(arrivalWindow.Minutes()),
+            Notify: notifyCustomer,
         }
 
         errObj, err := this.send (ctx, http.MethodPut, fmt.Sprintf("jobs/%s/schedule", jobId), header, schedule, nil)
