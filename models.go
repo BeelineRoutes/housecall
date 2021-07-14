@@ -127,8 +127,40 @@ type Address struct {
 	Longitude string `json:"longitude"`
 }
 
+// this became the most complicated thing, but just trying to return an empty string when appropriate 
 func (this Address) ToString() string {
-	return fmt.Sprintf ("%s %s %s, %s  %s", this.Street, this.Street2, this.City, this.State, this.Zip)
+	afterComma := ""
+	
+	if len(this.State) > 0 && len(this.Zip) > 0 { // we have both
+		afterComma = fmt.Sprintf(", %s  %s",this.State, this.Zip)
+	} else if len(this.Zip) > 0 {
+		afterComma = " " + this.Zip 
+	} else if len(this.State) > 0 {
+		afterComma = " " + this.State
+	}
+
+	beforeComma := this.Street
+	
+	if len(beforeComma) > 0 && len (this.Street2) > 0 {
+		beforeComma += " " + this.Street2
+	} else {
+		beforeComma = this.Street2 // just copy this
+	}
+
+	if len(beforeComma) > 0 && len (this.City) > 0 {
+		beforeComma += " " + this.City
+	} else {
+		beforeComma = this.City // just copy this
+	}
+
+	if len(beforeComma) > 0 && len(afterComma) > 0 {
+		return beforeComma + " " + afterComma
+	} else if len(beforeComma) > 0 {
+		return beforeComma
+	} else if len(afterComma) > 0 {
+		return afterComma
+	}
+	return "" // nothing do'n
 }
 
 //----- CUSTOMERS ---------------------------------------------------------------------------------------------------------//
