@@ -31,6 +31,30 @@ func TestThirdJobs (t *testing.T) {
 	*/
 }
 
+func TestThirdFutureJobs (t *testing.T) {
+	hc, cfg := newHouseCall (t)
+
+	ctx, cancel := context.WithTimeout (context.Background(), time.Minute * 10)
+	defer cancel()
+
+	// get our list of jobs, only unscheduled ones
+	jobs, err := hc.FuturePendingJobs (ctx, cfg.Token, time.Now(), time.Now().AddDate (0, 2, 0))
+	if err != nil { t.Fatal (err) }
+
+	t.Logf("got %d jobs\n", len(jobs))
+
+	assert.Equal (t, true, len(jobs) > 0, "expecting at least 1 job")
+	assert.NotEqual (t, "", jobs[0].Id, "not filled in")
+	assert.NotEqual (t, "", jobs[0].Customer.Id, "not filled in")
+	assert.NotEqual (t, "", jobs[0].Address.Id, "not filled in")
+	
+	/*
+	for _, j := range jobs {
+		t.Logf ("%+v\n", j)
+	}
+	*/
+}
+
 
 func TestThirdJobScheduleUpdate (t *testing.T) {
 	hc, cfg := newHouseCall (t)

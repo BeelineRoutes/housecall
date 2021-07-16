@@ -59,6 +59,8 @@ func (this *HouseCall) FuturePendingJobs (ctx context.Context, token string, sta
     params := url.Values{}
     params.Set("page_size", "200")
     params.Set("sort_direction", "desc")
+    params.Set("scheduled_start_min", start.Format(time.RFC3339))
+    params.Set("scheduled_start_max", finish.Format(time.RFC3339))
     
     for i := 1; i <= 10000; i++ { // stay in a loop as long as we're pulling jobs
         params.Set("page", fmt.Sprintf("%d", i)) // set our next page
@@ -88,8 +90,6 @@ func (this *HouseCall) FuturePendingJobs (ctx context.Context, token string, sta
                 }
             }
         }
-
-        fmt.Println ("Page", i, len(ret), time.Now().Format("15:04:05.000"))
 
         if i >= resp.TotalPages { return ret, nil } // we finished
         if oneValid == false { return ret, nil } // no jobs were before our cutoff, so assume we're done
