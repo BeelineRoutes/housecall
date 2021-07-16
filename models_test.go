@@ -80,6 +80,18 @@ func TestFirstModelsJobs2 (t *testing.T) {
 
 }
 
+//----- ADDRESS -------------------------------------------------------------------------------------------------------//
+
+func TestFirstAddress1 (t *testing.T) {
+	addr := &Address{}
+
+	err := json.Unmarshal ([]byte(`{"id":"adr_14841936f01143a4946f137b4c78ac58","type":"service","street":"3735 Arlington Oaks Dr","street_line_2":null,"city":"Mobile","state":"AL","zip":"36695","country":null}`), addr)
+	if err != nil { t.Fatal (err) }
+
+	assert.Equal (t, "3735 Arlington Oaks Dr", addr.Street, "street")
+	assert.Equal (t, "3735 Arlington Oaks Dr Mobile, AL  36695", addr.ToString(), "full string")
+}
+
 //----- COMPANY -------------------------------------------------------------------------------------------------------//
 
 func TestFirstModelsCompany (t *testing.T) {

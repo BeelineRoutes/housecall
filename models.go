@@ -143,18 +143,18 @@ func (this Address) ToString() string {
 	
 	if len(beforeComma) > 0 && len (this.Street2) > 0 {
 		beforeComma += " " + this.Street2
-	} else {
+	} else if len(beforeComma) == 0 {
 		beforeComma = this.Street2 // just copy this
 	}
 
 	if len(beforeComma) > 0 && len (this.City) > 0 {
 		beforeComma += " " + this.City
-	} else {
+	} else if len(beforeComma) == 0 {
 		beforeComma = this.City // just copy this
 	}
 
 	if len(beforeComma) > 0 && len(afterComma) > 0 {
-		return beforeComma + " " + afterComma
+		return beforeComma + afterComma
 	} else if len(beforeComma) > 0 {
 		return beforeComma
 	} else if len(afterComma) > 0 {
