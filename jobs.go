@@ -28,6 +28,7 @@ func (this *HouseCall) ListJobs (ctx context.Context, token string, previousDate
     params := url.Values{}
     params.Set("page_size", "100")
     params.Set("sort_direction", "desc")
+    params.Set("scheduled_start_min", previousDate.Format(time.RFC3339))
     
     for i := 1; i <= 10000; i++ { // stay in a loop as long as we're pulling jobs
         params.Set("page", fmt.Sprintf("%d", i)) // set our next page
@@ -41,11 +42,6 @@ func (this *HouseCall) ListJobs (ctx context.Context, token string, previousDate
         ret = append (ret, resp.Jobs...) // add this to our list
 
         if i >= resp.TotalPages { return ret, nil } // we finished
-        
-        lastJob := resp.Jobs[len(resp.Jobs)-1]
-        if lastJob.Schedule.Start.IsZero() == false && lastJob.Schedule.Start.Before (previousDate) {
-            return ret, nil // we hit our previous date limit, so we're done
-        }
     }
     return ret, errors.Errorf ("received over %d jobs in your history", len(ret))
 }
@@ -62,7 +58,7 @@ func (this *HouseCall) FuturePendingJobs (ctx context.Context, token string, sta
     params.Set("scheduled_start_min", start.Format(time.RFC3339))
     params.Set("scheduled_start_max", finish.Format(time.RFC3339))
     
-    for i := 1; i <= 10000; i++ { // stay in a loop as long as we're pulling jobs
+    for i := 1; i <= 1000; i++ { // stay in a loop as long as we're pulling jobs
         params.Set("page", fmt.Sprintf("%d", i)) // set our next page
         resp := jobListResponse{}
         
@@ -71,28 +67,14 @@ func (this *HouseCall) FuturePendingJobs (ctx context.Context, token string, sta
         if errObj != nil { return nil, errObj.Err() } // something else bad
 
         // we're here, we're good
-        oneValid := false // keeps track if we're still within the window of valid appointment times, this doesn't actually return perfectly
-
         // make sure this job is one we care about
         for _, j := range resp.Jobs {
             if j.IsPending() {
-                if j.Schedule.Start.IsZero() {
-                    ret = append (ret, j) // add this to our list
-                    oneValid = true 
-                } else { // the schedule is set, let's see where it falls
-                    if j.Schedule.Start.Before (finish) && j.Schedule.Start.After (start) {
-                        ret = append (ret, j) // add this to our list
-                    }
-
-                    if j.Schedule.Start.After (start) { // we're still before our start, so go to the next page
-                        oneValid = true 
-                    }
-                }
+                ret = append (ret, j) // add this to our list
             }
         }
 
         if i >= resp.TotalPages { return ret, nil } // we finished
-        if oneValid == false { return ret, nil } // no jobs were before our cutoff, so assume we're done
     }
     return ret, errors.Errorf ("received over %d jobs in your history", len(ret))
 }
