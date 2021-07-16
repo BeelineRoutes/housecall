@@ -89,6 +89,8 @@ func (this *HouseCall) FuturePendingJobs (ctx context.Context, token string, sta
             }
         }
 
+        fmt.Println ("Page", i, len(ret), time.Now().Format("15:04:05.000"))
+
         if i >= resp.TotalPages { return ret, nil } // we finished
         if oneValid == false { return ret, nil } // no jobs were before our cutoff, so assume we're done
     }
