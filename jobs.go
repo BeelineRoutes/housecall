@@ -50,6 +50,51 @@ func (this *HouseCall) ListJobs (ctx context.Context, token string, previousDate
     return ret, errors.Errorf ("received over %d jobs in your history", len(ret))
 }
 
+// returns appointments that are pending and within our start and finish ranges
+func (this *HouseCall) FuturePendingJobs (ctx context.Context, token string, start, finish time.Time) ([]Job, error) {
+    ret := make([]Job, 0) // main list to return
+    header := make(map[string]string)
+    header["Authorization"] = "Bearer " + token 
+
+    params := url.Values{}
+    params.Set("page_size", "100")
+    params.Set("sort_direction", "desc")
+    
+    for i := 1; i <= 10000; i++ { // stay in a loop as long as we're pulling jobs
+        params.Set("page", fmt.Sprintf("%d", i)) // set our next page
+        resp := jobListResponse{}
+        
+        errObj, err := this.send (ctx, http.MethodGet, fmt.Sprintf("jobs?%s", params.Encode()), header, nil, &resp)
+        if err != nil { return nil, errors.WithStack(err) } // bail
+        if errObj != nil { return nil, errObj.Err() } // something else bad
+
+        // we're here, we're good
+        oneValid := false // keeps track if we're still within the window of valid appointment times, this doesn't actually return perfectly
+
+        // make sure this job is one we care about
+        for _, j := range resp.Jobs {
+            if j.IsPending() {
+                if j.Schedule.Start.IsZero() {
+                    ret = append (ret, j) // add this to our list
+                    oneValid = true 
+                } else { // the schedule is set, let's see where it falls
+                    if j.Schedule.Start.Before (finish) && j.Schedule.Start.After (start) {
+                        ret = append (ret, j) // add this to our list
+                    }
+
+                    if j.Schedule.Start.After (start) { // we're still before our start, so go to the next page
+                        oneValid = true 
+                    }
+                }
+            }
+        }
+
+        if i >= resp.TotalPages { return ret, nil } // we finished
+        if oneValid == false { return ret, nil } // no jobs were before our cutoff, so assume we're done
+    }
+    return ret, errors.Errorf ("received over %d jobs in your history", len(ret))
+}
+
 // gets the info about a specific job
 func (this *HouseCall) GetJob (ctx context.Context, token, jobId string) (*Job, error) {
     header := make(map[string]string)
