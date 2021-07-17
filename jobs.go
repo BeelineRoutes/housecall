@@ -19,18 +19,17 @@ import (
  //----- FUNCTIONS -------------------------------------------------------------------------------------------------------//
 //-----------------------------------------------------------------------------------------------------------------------//
 
-// Returns a list of the jobs in desc order up until the previous Date.  Unscheduled jobs will always get included first
-func (this *HouseCall) ListJobs (ctx context.Context, token string, previousDate time.Time) ([]Job, error) {
+// Returns a list of the jobs that don't have a target time yet and are still pending
+func (this *HouseCall) ListUnscheduledJobs (ctx context.Context, token string) ([]Job, error) {
     ret := make([]Job, 0) // main list to return
     header := make(map[string]string)
     header["Authorization"] = "Bearer " + token 
 
     params := url.Values{}
-    params.Set("page_size", "100")
+    params.Set("page_size", "200")
     params.Set("sort_direction", "desc")
-    params.Set("scheduled_start_min", previousDate.Format(time.RFC3339))
     
-    for i := 1; i <= 10000; i++ { // stay in a loop as long as we're pulling jobs
+    for i := 1; i <= 1000; i++ { // stay in a loop as long as we're pulling jobs
         params.Set("page", fmt.Sprintf("%d", i)) // set our next page
         resp := jobListResponse{}
         
@@ -39,9 +38,15 @@ func (this *HouseCall) ListJobs (ctx context.Context, token string, previousDate
         if errObj != nil { return nil, errObj.Err() } // something else bad
 
         // we're here, we're good
-        ret = append (ret, resp.Jobs...) // add this to our list
-
+        foundOne := false 
+        for _, j := range resp.Jobs {
+            if j.IsPending() && j.Schedule.Start.IsZero() {
+                foundOne = true
+                ret = append (ret, j) // this one makes our list
+            }
+        }
         if i >= resp.TotalPages { return ret, nil } // we finished
+        if foundOne == false { return ret, nil } // assume no more unscheduled ones
     }
     return ret, errors.Errorf ("received over %d jobs in your history", len(ret))
 }

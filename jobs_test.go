@@ -16,7 +16,7 @@ func TestThirdJobs (t *testing.T) {
 	defer cancel()
 
 	// get our list of jobs, only unscheduled ones
-	jobs, err := hc.ListJobs (ctx, cfg.Token, time.Now())
+	jobs, err := hc.ListUnscheduledJobs (ctx, cfg.Token)
 	if err != nil { t.Fatal (err) }
 
 	assert.Equal (t, true, len(jobs) > 0, "expecting at least 1 job")
@@ -63,7 +63,7 @@ func TestThirdJobScheduleUpdate (t *testing.T) {
 	defer cancel()
 
 	// get our list of jobs, we need one of these to update
-	jobs, err := hc.ListJobs (ctx, cfg.Token, time.Now())
+	jobs, err := hc.ListUnscheduledJobs (ctx, cfg.Token)
 	if err != nil { t.Fatal (err) }
 
 	if len(jobs) == 0 { t.Fatal ("need at least 1 job to do this test") }
