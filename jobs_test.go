@@ -38,7 +38,7 @@ func TestThirdFutureJobs (t *testing.T) {
 	defer cancel()
 
 	// get our list of jobs, only unscheduled ones
-	jobs, err := hc.FuturePendingJobs (ctx, cfg.Token, time.Now(), time.Now().AddDate (0, 2, 0))
+	jobs, err := hc.ListJobs (ctx, cfg.Token, time.Now(), time.Now().AddDate (0, 2, 0))
 	if err != nil { t.Fatal (err) }
 
 	t.Logf("got %d jobs\n", len(jobs))

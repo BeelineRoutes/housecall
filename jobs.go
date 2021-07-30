@@ -52,7 +52,7 @@ func (this *HouseCall) ListUnscheduledJobs (ctx context.Context, token string) (
 }
 
 // returns appointments that are pending and within our start and finish ranges
-func (this *HouseCall) FuturePendingJobs (ctx context.Context, token string, start, finish time.Time) ([]Job, error) {
+func (this *HouseCall) ListJobs (ctx context.Context, token string, start, finish time.Time) ([]Job, error) {
     ret := make([]Job, 0) // main list to return
     header := make(map[string]string)
     header["Authorization"] = "Bearer " + token 
@@ -72,13 +72,8 @@ func (this *HouseCall) FuturePendingJobs (ctx context.Context, token string, sta
         if errObj != nil { return nil, errObj.Err() } // something else bad
 
         // we're here, we're good
-        // make sure this job is one we care about
-        for _, j := range resp.Jobs {
-            if j.IsPending() {
-                ret = append (ret, j) // add this to our list
-            }
-        }
-
+        ret = append (ret, resp.Jobs...)
+        
         if i >= resp.TotalPages { return ret, nil } // we finished
     }
     return ret, errors.Errorf ("received over %d jobs in your history", len(ret))

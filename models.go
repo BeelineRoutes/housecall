@@ -200,7 +200,22 @@ type Job struct {
 		End time.Time `json:"scheduled_end"`
 		Window int `json:"arrival_window"`
 	}
+	WorkTimestamps struct {
+		OnMyWay time.Time `json:"on_my_way_at"`
+		Started time.Time `json:"started_at"`
+		Completed time.Time `json:"completed_at"`
+	} `json:"work_timestamps"`
 }
+
+/* known work status
+needs scheduling
+scheduled
+in progress
+complete unrated
+complete rated
+user canceled
+pro canceled
+*/
 
 // returns that the job is in a state where the job is still expected to be completed in the future
 func (this *Job) IsPending () bool {
@@ -209,6 +224,15 @@ func (this *Job) IsPending () bool {
 		return true
 	}
 	return false // this is in a state where the job has been cancelled or already started
+}
+
+// returns that the job is in a state where everything is still a "go".  Either it hasn't happened yet, it's happening now, or it will in the future
+func (this *Job) IsActive () bool {
+	switch this.WorkStatus {
+	case "scheduled", "in progress", "complete unrated", "complete rated":
+		return true
+	}
+	return false // not an active job
 }
 
 type JobSchedule struct {
@@ -260,4 +284,3 @@ func NewHouseCall (clientId, clientSecret, callbackUrl string) (*HouseCall, erro
 		callbackUrl: callbackUrl,
 	}, nil
 }
-
