@@ -14,6 +14,19 @@ import (
  //----- CONSTS ----------------------------------------------------------------------------------------------------------//
 //-----------------------------------------------------------------------------------------------------------------------//
 
+type WorkStatus string 
+
+const (
+	WorkStatus_needsScheduling 		WorkStatus = "needs scheduling"
+	WorkStatus_scheduled	 		WorkStatus = "scheduled"
+	WorkStatus_inProgress	 		WorkStatus = "in progress"
+	WorkStatus_completeUnrated 		WorkStatus = "complete unrated"
+	WorkStatus_completeRated 		WorkStatus = "complete rated"
+	WorkStatus_userCanceled 		WorkStatus = "user canceled"
+	WorkStatus_proCanceled 			WorkStatus = "pro canceled"
+	
+)
+
 const apiURL = "https://api.housecallpro.com"
 
 //----- ERRORS ---------------------------------------------------------------------------------------------------------//
@@ -207,20 +220,10 @@ type Job struct {
 	} `json:"work_timestamps"`
 }
 
-/* known work status
-needs scheduling
-scheduled
-in progress
-complete unrated
-complete rated
-user canceled
-pro canceled
-*/
-
 // returns that the job is in a state where the job is still expected to be completed in the future
 func (this *Job) IsPending () bool {
-	switch this.WorkStatus {
-	case "scheduled", "needs scheduling":
+	switch WorkStatus(this.WorkStatus) {
+	case WorkStatus_scheduled, WorkStatus_needsScheduling:
 		return true
 	}
 	return false // this is in a state where the job has been cancelled or already started
@@ -228,8 +231,8 @@ func (this *Job) IsPending () bool {
 
 // returns that the job is in a state where everything is still a "go".  Either it hasn't happened yet, it's happening now, or it will in the future
 func (this *Job) IsActive () bool {
-	switch this.WorkStatus {
-	case "scheduled", "in progress", "complete unrated", "complete rated":
+	switch WorkStatus(this.WorkStatus) {
+	case WorkStatus_scheduled, WorkStatus_inProgress, WorkStatus_completeUnrated, WorkStatus_completeRated:
 		return true
 	}
 	return false // not an active job
