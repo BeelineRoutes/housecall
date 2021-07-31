@@ -201,7 +201,7 @@ type Job struct {
 	Customer Customer
 	Address Address `json:"address"`
 	Note string `json:"note"`
-	WorkStatus string `json:"work_status"`
+	WorkStatus WorkStatus `json:"work_status"`
 	Invoice string `json:"invoice_number"`
 	Balance int64 `json:"outstanding_balance"`
 	Total int64 `json:"total_amount"`
