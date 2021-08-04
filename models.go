@@ -8,6 +8,8 @@ import (
 	"net/url"
 	"net/http"
 	"time"
+	"strings"
+	"strconv"
 )
 
   //-----------------------------------------------------------------------------------------------------------------------//
@@ -104,6 +106,128 @@ type Company struct {
 	Website string `json:"website"`
 	DefaultArrivalWindow int `json:"default_arrival_window"`
 	TimeZone string `json:"time_zone"`
+}
+
+// converts the companies timezone string into a golang location object
+func (this Company) ConvertTimezone () (*time.Location, error) {
+	if len(this.TimeZone) == 0 { this.TimeZone = "UTC" } // just a default
+
+	return time.LoadLocation (this.TimeZone)
+}
+
+//----- SCHEDULE ---------------------------------------------------------------------------------------------------------//
+
+type daySchedule struct {
+	Start time.Time 
+	Duration time.Duration 
+}
+
+type scheduleTime string
+
+// converts this string into a golang time object
+func (this scheduleTime) Time (loc *time.Location) (time.Time, error) {
+	tm := time.Now() // just use the current calendar year, month, day for seeding these times to return
+
+	parts := strings.Split (string(this), ":") // expecting a string "13:00"
+	if len(parts) != 2 { 
+		return time.Time{}, errors.Errorf ("bad start time : %s", this) 
+	}
+
+	hr, err := strconv.Atoi (parts[0]) // get the hours
+	if err != nil { 
+		return time.Time{}, errors.Errorf ("bad start time hour : %s : %s", this, err.Error()) 
+	}
+
+	min, err := strconv.Atoi (parts[1]) // get the minutes 
+	if err != nil { 
+		return time.Time{}, errors.Errorf ("bad start time minutes : %s : %s", this, err.Error()) 
+	}
+
+	// now create our actual start time, using our timezone
+	return time.Date (tm.Year(), tm.Month(), tm.Day(), hr, min, 0, 0, loc), nil 
+}
+
+type Schedule struct {
+	DailyAvailabilities struct {
+		Data []struct {
+			DayName string `json:"day_name"`
+			ScheduleWindows struct {
+				Data []struct {
+					StartTime scheduleTime `json:"start_time"`
+					EndTime scheduleTime `json:"end_time"`
+				} `json:"data"`
+			} `json:"schedule_windows"`
+		} `json:"data"`
+	} `json:"daily_availabilities"`
+}
+
+// goes through all the days and returns the earliest start and end for each
+// leaves Start and End as IsZero if there's no schedules for that day
+// this always returns 7 items, 1 for each day of the week
+// loc is the local timezone for this schedule, HCP has the times as a local string
+func (this *Schedule) DaySchedules (loc *time.Location) ([]daySchedule, error) {
+	var ret []daySchedule // this is what we're going to try to fill in
+
+	for d := 0; d < 7; d++ { // 7 days in a loop
+		day := daySchedule{}
+		dayName := "saturday" // default
+
+		switch time.Weekday(d) { // figure out what our target date is in housecall
+		case time.Sunday:
+			dayName = "sunday"
+		case time.Monday:
+			dayName = "monday"
+		case time.Tuesday:
+			dayName = "tuesday"
+		case time.Wednesday:
+			dayName = "wednesday"
+		case time.Thursday:
+			dayName = "thursday"
+		case time.Friday:
+			dayName = "friday"
+		}
+
+		var early, late time.Time
+
+		// loop through our data looking for the correct date
+		for _, data := range this.DailyAvailabilities.Data {
+			if strings.EqualFold (data.DayName, dayName) { // this is our target day of the week
+				for _, list := range data.ScheduleWindows.Data {
+					// parse out our start and end times
+					start, err := list.StartTime.Time(loc)
+					if err != nil {
+						return nil, errors.Wrapf (err, "Weekday : %s", dayName)
+					}
+					
+					end, err := list.EndTime.Time(loc) // and the end time
+					if err != nil {
+						return nil, errors.Wrapf (err, "Weekday : %s", dayName)
+					}
+
+					// what we're looking for is an earlier start time, and a later end time
+					if early.IsZero() || start.Before(early) {
+						early = start 
+					}
+					if late.IsZero() || end.After(late) {
+						late = end 
+					}
+				}
+			}
+		}
+
+		// at this point we know our ealiest start and latest end for the date, so set them in our daySchedule
+		day.Start = early 
+		day.Duration = late.Sub(early) // if these were never set, it still works out
+
+		// now i want the Weekday to return the correct day, so we loop, adding days until it matches
+		for day.Start.Weekday() != time.Weekday(d) {
+			day.Start = day.Start.AddDate (0, 0, 1) // date only matters so it matches the day of the week for us
+		}
+
+		ret = append (ret, day) // add this to our return list
+	}
+
+	return ret, nil // we're good
 }
 
 //----- PROS ---------------------------------------------------------------------------------------------------------//

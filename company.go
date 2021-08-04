@@ -30,3 +30,18 @@ func (this *HouseCall) Company (ctx context.Context, token string) (*Company, er
     return company, nil 
 }
 
+// Gets the companies schedule.  The return from HCP is a little... tough to interpret
+// this just returns time.Times for the start and end of the longest time during the day
+func (this *HouseCall) Schedule (ctx context.Context, token string) (*Schedule, error) {
+  sch := &Schedule{}
+  header := make(map[string]string)
+  header["Authorization"] = "Bearer " + token 
+
+  errObj, err := this.send (ctx, http.MethodGet, "company/schedule_availability", header, nil, sch)
+  if err != nil { return nil, errors.WithStack(err) } // bail
+  if errObj != nil { return nil, errObj.Err() } // something else bad
+
+  // we're here, we're good
+  return sch, nil 
+}
+
