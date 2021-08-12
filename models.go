@@ -165,8 +165,11 @@ type Schedule struct {
 // leaves Start and End as IsZero if there's no schedules for that day
 // this always returns 7 items, 1 for each day of the week
 // loc is the local timezone for this schedule, HCP has the times as a local string
+// when returned it converts it to UTC time
 func (this *Schedule) DaySchedules (loc *time.Location) ([]daySchedule, error) {
 	var ret []daySchedule // this is what we're going to try to fill in
+
+	utc, _ := time.LoadLocation ("UTC")
 
 	for d := 0; d < 7; d++ { // 7 days in a loop
 		day := daySchedule{}
@@ -216,7 +219,7 @@ func (this *Schedule) DaySchedules (loc *time.Location) ([]daySchedule, error) {
 		}
 
 		// at this point we know our ealiest start and latest end for the date, so set them in our daySchedule
-		day.Start = early 
+		day.Start = early.In (utc) // keep everything in utc time
 		day.Duration = late.Sub(early) // if these were never set, it still works out
 
 		// now i want the Weekday to return the correct day, so we loop, adding days until it matches
