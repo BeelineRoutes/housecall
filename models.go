@@ -365,13 +365,23 @@ func (this *Job) IsActive () bool {
 	return false // not an active job
 }
 
+type DispatchedEmployee struct {
+	Id string `json:"employee_id"`
+}
+
 type JobSchedule struct {
 	Start time.Time `json:"start_time"`
 	End time.Time `json:"end_time"`
 	Window int `json:"arrival_window_in_minutes"`
 	Notify bool `json:"notify"`
 	NotifyPro bool `json:"notify_pro"`
+	DispatchedEmployees []DispatchedEmployee `json:dispatched_employees"`
 }
+
+type JobDispatch struct {
+	DispatchedEmployees []DispatchedEmployee `json:dispatched_employees"`
+}
+
 
 type jobListResponse struct {
 	Jobs []Job `json:"jobs"`

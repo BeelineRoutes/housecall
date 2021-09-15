@@ -90,7 +90,7 @@ func (this *HouseCall) GetJob (ctx context.Context, token, jobId string) (*Job, 
 
 // sets the new job schedule time
 // if startTime is zero, then this will remove the scheduled time from the job
-func (this *HouseCall) UpdateJobSchedule (ctx context.Context, token, jobId string, startTime time.Time, 
+func (this *HouseCall) UpdateJobSchedule (ctx context.Context, token, jobId, employeeId string, startTime time.Time, 
                                             duration, arrivalWindow time.Duration, notifyCustomer bool) error {
 
     header := make(map[string]string)
@@ -109,11 +109,34 @@ func (this *HouseCall) UpdateJobSchedule (ctx context.Context, token, jobId stri
             Notify: notifyCustomer,
         }
 
+        // add in our assigned employee
+        schedule.DispatchedEmployees = append (schedule.DispatchedEmployees, DispatchedEmployee{employeeId}) 
+
         errObj, err := this.send (ctx, http.MethodPut, fmt.Sprintf("jobs/%s/schedule", jobId), header, schedule, nil)
         if err != nil { return errors.WithStack(err) } // bail
         if errObj != nil { return errObj.Err() } // something else bad
     }
 
+    // we're here, we're good
+    return nil
+}
+
+// sets the list of all assigned employees for a job
+func (this *HouseCall) UpdateJobDispatch (ctx context.Context, token, jobId string, employeeIds ...string) error {
+    header := make(map[string]string)
+    header["Authorization"] = "Bearer " + token 
+    
+    dispatch := &JobDispatch {}
+
+    // add in our employees
+    for _, id := range employeeIds {
+        dispatch.DispatchedEmployees = append (dispatch.DispatchedEmployees, DispatchedEmployee{id}) 
+    }
+
+    errObj, err := this.send (ctx, http.MethodPut, fmt.Sprintf("jobs/%s/dispatch", jobId), header, dispatch, nil)
+    if err != nil { return errors.WithStack(err) } // bail
+    if errObj != nil { return errObj.Err() } // something else bad
+    
     // we're here, we're good
     return nil
 }

@@ -73,7 +73,12 @@ func TestThirdJobScheduleUpdate (t *testing.T) {
 	// now update the schedule to be something
 	targetDate := time.Now().AddDate (0, 0, 7) // 1 week in the future
 
-	err = hc.UpdateJobSchedule (ctx, cfg.Token, jobs[0].Id, targetDate, time.Minute * 33, time.Minute * 34, false) // weird things so we know we updated
+	// get our list of employees
+	employees, err := hc.ListEmployees (ctx, cfg.Token)
+	if err != nil { t.Fatal (err) }
+	if len(employees) == 0 { t.Fatal ("you need an employee to assign a scheduled job to") }
+
+	err = hc.UpdateJobSchedule (ctx, cfg.Token, jobs[0].Id, employees[0].Id, targetDate, time.Minute * 33, time.Minute * 34, false) // weird things so we know we updated
 	if err != nil { t.Fatal (err) }
 
 	job, err := hc.GetJob (ctx, cfg.Token, jobs[0].Id) // get this job to verify we updated it
@@ -85,7 +90,7 @@ func TestThirdJobScheduleUpdate (t *testing.T) {
 
 	// all good, now clear it
 
-	err = hc.UpdateJobSchedule (ctx, cfg.Token, jobs[0].Id, time.Time{}, 0, 0, false)
+	err = hc.UpdateJobSchedule (ctx, cfg.Token, jobs[0].Id, "", time.Time{}, 0, 0, false)
 	if err != nil { t.Fatal (err) }
 
 	job, err = hc.GetJob (ctx, cfg.Token, jobs[0].Id) // get this job to verify we updated it
