@@ -375,11 +375,11 @@ type JobSchedule struct {
 	Window int `json:"arrival_window_in_minutes"`
 	Notify bool `json:"notify"`
 	NotifyPro bool `json:"notify_pro"`
-	DispatchedEmployees []DispatchedEmployee `json:dispatched_employees"`
+	DispatchedEmployees []DispatchedEmployee `json:"dispatched_employees"`
 }
 
 type JobDispatch struct {
-	DispatchedEmployees []DispatchedEmployee `json:dispatched_employees"`
+	DispatchedEmployees []DispatchedEmployee `json:"dispatched_employees"`
 }
 
 

@@ -99,3 +99,21 @@ func TestThirdJobScheduleUpdate (t *testing.T) {
 	assert.Equal (t, true, job.Schedule.Start.IsZero(), "start is zero")
 	assert.Equal (t, true, job.Schedule.End.IsZero(), "end is zero")
 }
+
+/*
+func TestSimple (t *testing.T) {
+	hc, cfg := newHouseCall (t)
+
+	ctx, cancel := context.WithTimeout (context.Background(), time.Minute) // this should take < 1 minute
+	defer cancel()
+
+	targetDate := time.Now().AddDate (0, 0, 2) // 1 week in the future
+
+	err := hc.UpdateJobSchedule (ctx, cfg.Token, "job_bed0d8b73e164e0a8be68b71603a9a5c", "pro_2a51082b07424ba9976da29c7d4fcbac", targetDate, time.Minute * 30, time.Minute * 30, false) // weird things so we know we updated
+	if err != nil { t.Fatal (err) }
+
+}
+
+
+*/
+
