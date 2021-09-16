@@ -56,8 +56,6 @@ func (this *HouseCall) send (ctx context.Context, requestType, link string, head
 		if err != nil { return nil, errors.WithStack (err) }
 
 		header["Content-Type"] = "application/json; charset=utf-8"
-
-		fmt.Println (string(jstr))
 	}
 	
 	req, err := http.NewRequestWithContext (ctx, requestType, fmt.Sprintf ("%s/%s", apiURL, link), bytes.NewBuffer(jstr))
