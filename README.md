@@ -1,20 +1,22 @@
-# HouseCallPro
+![Go Version](https://img.shields.io/badge/Go-v1.17-blue?logo=go)
+![Build](https://img.shields.io/badge/build-passing-success?logo=gnubash)
+
+## HouseCall Pro API wrapper
 Package provides a wrapper for interacting with the HouseCallPro API.  Written in pure GoLang
 
 `go get github.com/BeelineRoutes/housecall`
 
-## House Call OAuth flow
+### House Call OAuth flow
 [Offical documentation for the API can be found here](https://pro.housecallpro.com/docs/alpha/api.html).
 
 First have your user go to 
 `https://api.housecallpro.com/oauth/authorize?response_type=code&client_id=clientId&redirect_uri=https://your-url.com`
 
 This will return to your redirect url with a "code" as a url param
-`https://dev-api.geniemobile.net/housecall?code=urlParamCode`
+`https://your-url.com/housecall?code=urlParamCode`
 
-## Usage
+### Usage
 ```go
-
 import (
     "github.com/BeelineRoutes/housecall"
     "github.com/pkg/errors" 
@@ -52,11 +54,17 @@ default:
 
 // token is used as the bearer for future calls
 // refresh can be used to generate a new token when it expires
+
 ```
 
-## History
+### History
 This is actively being developed and while the goal is to prevent breaking changes, this is still in an early alpha.
 
 - 0.1 Initial version allows for validating a client OAuth token and retrieving the Token and Refresh tokens
 
+- 0.2 Start and end dates used for filtering jobs
+
+- 0.3 URL params for additional filtering of jobs
+
+- 0.4 Writes updates back to HCP to update jobs and their assigned employees
 
