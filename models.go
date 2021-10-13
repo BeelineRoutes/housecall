@@ -35,6 +35,7 @@ const apiURL = "https://api.housecallpro.com"
 
 var (
 	ErrInvalidCode 		= errors.New("OAuth code not valid")
+	ErrAuthExpired		= errors.New("OAuth expired")
 )
 
 
@@ -62,6 +63,8 @@ func (this *Error) Err () error {
 	case http.StatusUnauthorized:
 		if this.Error == "invalid_grant" { // this is for granting access based on the passed code
 			return errors.Wrap (ErrInvalidCode, this.Description)
+		} else {
+			return errors.Wrap (ErrAuthExpired, this.Description) // invalid for another reason, most likely the oauth has been revoked
 		}
 
 	}
