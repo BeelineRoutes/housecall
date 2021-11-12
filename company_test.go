@@ -49,6 +49,6 @@ func TestThirdSchedule (t *testing.T) {
 	
 	assert.Equal (t, 7, len(list), "expecting 7 days")
 	assert.Equal (t, time.Weekday(1), list[1].Start.Weekday(), "Monday should be our second index")
-	assert.Equal (t, time.Minute * 450, list[3].Duration, "wednesday shouild have 7.5 hours of work")
+	assert.Equal (t, time.Minute * 600, list[3].Duration, "wednesday shouild have 10 hours of work")
 }
 

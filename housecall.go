@@ -1,10 +1,13 @@
-// HouseCall Pro API wrapper
-// written for GoLang
-// Created 2021-04-27 by Nathan Thomas 
-// Courtesy of BeelineRoutes.com
+/** ****************************************************************************************************************** **
+    HouseCall Pro API wrapper
+    written for GoLang
+    Created 2021-04-27 by Nathan Thomas 
+    Courtesy of BeelineRoutes.com
 
-// current docs in v1
-// https://docs.housecallpro.com/
+    current docs in v1
+    https://docs.housecallpro.com/
+
+** ****************************************************************************************************************** **/
 
 package housecall 
 

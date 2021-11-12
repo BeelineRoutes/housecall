@@ -1,3 +1,11 @@
+/** ****************************************************************************************************************** **
+	Calls related to jobs
+
+    There's a couple of filters used for requesting jobs, these have been broken out into their own functions.
+
+    Updating jobs allows for setting a target time as well as an employee.
+    Multiple employees may be assigned as well using UpdateJobDispatch
+** ****************************************************************************************************************** **/
 
 package housecall 
 
@@ -88,7 +96,8 @@ func (this *HouseCall) GetJob (ctx context.Context, token, jobId string) (*Job, 
     return job, nil
 }
 
-// sets the new job schedule time
+// updates the target scheduled time for a job
+// at least 1 employee is required for this
 // if startTime is zero, then this will remove the scheduled time from the job
 func (this *HouseCall) UpdateJobSchedule (ctx context.Context, token, jobId, employeeId string, startTime time.Time, 
                                             duration, arrivalWindow time.Duration, notifyCustomer bool) error {
@@ -122,6 +131,7 @@ func (this *HouseCall) UpdateJobSchedule (ctx context.Context, token, jobId, emp
 }
 
 // sets the list of all assigned employees for a job
+// only updates the list of employees assigned to a job
 func (this *HouseCall) UpdateJobDispatch (ctx context.Context, token, jobId string, employeeIds ...string) error {
     header := make(map[string]string)
     header["Authorization"] = "Bearer " + token 

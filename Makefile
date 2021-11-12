@@ -1,32 +1,31 @@
 
 # go params
 GOCMD=go
-GOTEST=$(GOCMD) test
 
 # normal entry points
 	
 update:
-	@go get -u all
+	clear 
+	@echo "updating dependencies..."
+	@go get -u -t ./...
+	@go mod tidy 
 
 build:
 	clear 
-	@$(GOTEST) -run TestFirstModelsError ./...
-
-test-first: build
+	@echo "building..."
+	@$(GOCMD) build .
+	
 test-first:
 	clear
 	@echo "testing housecall primary auth functions..."
-	@$(GOTEST) -v -run TestFirst ./...
+	@$(GOCMD) test -run TestFirst ./...
 
-test-second: build
 test-second:
 	clear
 	@echo "test housecall second level functions..."
-	@$(GOTEST) -run TestSecond ./...
+	@$(GOCMD) test -run TestSecond ./...
 
-test-third: build
 test-third:
 	clear
 	@echo "test housecall third level functions..."
-	@$(GOTEST) -v -run TestThird ./...
-
+	@$(GOCMD) test -run TestThird ./...
