@@ -38,6 +38,7 @@ func (this *HouseCall) ListUnscheduledJobs (ctx context.Context, token string, p
     params.Set("work_status[]", "unscheduled")
 
     if pageLimit == 0 { pageLimit = 1 } // just to make it work
+    if pageLimit > 100 { pageLimit = 100 } // let's not go crazy here
     
     for i := 1; i <= pageLimit; i++ { // stay in a loop as long as we're pulling jobs
         params.Set("page", fmt.Sprintf("%d", i)) // set our next page
@@ -52,7 +53,7 @@ func (this *HouseCall) ListUnscheduledJobs (ctx context.Context, token string, p
 
         if i >= resp.TotalPages { return ret, nil } // we finished
     }
-    return ret, errors.Errorf ("received over %d jobs in your history", len(ret))
+    return ret, nil // we're done
 }
 
 // returns all jobs that are within our start and finish ranges
