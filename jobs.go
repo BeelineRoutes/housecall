@@ -28,7 +28,7 @@ import (
 //-----------------------------------------------------------------------------------------------------------------------//
 
 // Returns a list of the jobs that are marked as "unscheduled".
-func (this *HouseCall) ListUnscheduledJobs (ctx context.Context, token string) ([]Job, error) {
+func (this *HouseCall) ListUnscheduledJobs (ctx context.Context, token string, pageLimit int) ([]Job, error) {
     ret := make([]Job, 0) // main list to return
     header := make(map[string]string)
     header["Authorization"] = "Bearer " + token 
@@ -36,8 +36,10 @@ func (this *HouseCall) ListUnscheduledJobs (ctx context.Context, token string) (
     params := url.Values{}
     params.Set("page_size", "200")
     params.Set("work_status[]", "unscheduled")
+
+    if pageLimit == 0 { pageLimit = 1 } // just to make it work
     
-    for i := 1; i <= 1000; i++ { // stay in a loop as long as we're pulling jobs
+    for i := 1; i <= pageLimit; i++ { // stay in a loop as long as we're pulling jobs
         params.Set("page", fmt.Sprintf("%d", i)) // set our next page
         resp := jobListResponse{}
         

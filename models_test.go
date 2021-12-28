@@ -103,6 +103,7 @@ func TestFirstModelsCompany (t *testing.T) {
 	assert.Equal (t, "7667 E Iliff Ave Suite f", company.Address.Street, "street")
 	assert.Equal (t, "39.675602", company.Address.Latitude, "latitude")
 	assert.Equal (t, "America/Denver", company.TimeZone, "time zone")
+	assert.Equal (t, "Comrade Brewing Company", company.Name, "name")
 }
 
 //----- SCHEDULE -------------------------------------------------------------------------------------------------------//
