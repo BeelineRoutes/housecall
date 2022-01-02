@@ -326,6 +326,11 @@ type Customer struct {
 	Addresses []Address `json:"addresses"`
 }
 
+type customerListResponse struct {
+	Customers []Customer `json:"customers"`
+	TotalItems int `json:"total_items"`
+	TotalPages int `json:"total_pages"`
+}
 
 //----- JOBS ---------------------------------------------------------------------------------------------------------//
 
