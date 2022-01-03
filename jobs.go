@@ -182,3 +182,33 @@ func (this *HouseCall) UpdateJobDispatch (ctx context.Context, token, jobId stri
     // we're here, we're good
     return nil
 }
+
+// creates a new job in the system
+func (this *HouseCall) CreateJob (ctx context.Context, token, customerId, addressId string, 
+                                    startTime time.Time, duration, arrivalWindow time.Duration, 
+                                    employeeIds ...string) error {
+    header := make(map[string]string)
+    header["Authorization"] = "Bearer " + token 
+    header["Content-Type"] = "application/json; charset=utf-8"
+    
+    job := &createJob {
+        CustomerId: customerId,
+        AddressId: addressId,
+    }
+
+    // add in our employees
+    for _, id := range employeeIds {
+        job.Employees = append (job.Employees, id) 
+    }
+
+    job.Schedule.Start = startTime
+    job.Schedule.End = startTime.Add (duration)
+    job.Schedule.Window = fmt.Sprintf ("%d", int(arrivalWindow.Minutes()))
+    
+    errObj, err := this.send (ctx, http.MethodPost, "jobs", header, job, nil)
+    if err != nil { return errors.WithStack(err) } // bail
+    if errObj != nil { return errObj.Err() } // something else bad
+    
+    // we're here, we're good
+    return nil
+}

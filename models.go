@@ -401,6 +401,17 @@ type jobListResponse struct {
 	TotalPages int `json:"total_pages"`
 }
 
+type createJob struct {
+	CustomerId string `json:"customer_id"`
+	AddressId string `json:"address_id"`
+	Schedule struct {
+		Start time.Time `json:"scheduled_start"`
+		End time.Time `json:"scheduled_end"`
+		Window string `json:"arrival_window"`
+	} `json:"schedule"`
+	Employees []string `json:"assigned_employee_ids"`
+}
+
 //----- PUBLIC ---------------------------------------------------------------------------------------------------------//
 
 type HouseCall struct {
