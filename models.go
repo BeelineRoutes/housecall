@@ -401,6 +401,14 @@ type jobListResponse struct {
 	TotalPages int `json:"total_pages"`
 }
 
+type LineItem struct {
+	Name string `json:"name"`
+	Description string `json:"description"`
+	UnitPrice int `json:"unit_price"`
+	Quantity int `json:"quantity"`
+	UnitCost int `json:"unit_cost"`
+}
+
 type createJob struct {
 	CustomerId string `json:"customer_id"`
 	AddressId string `json:"address_id"`
@@ -409,6 +417,7 @@ type createJob struct {
 		End time.Time `json:"scheduled_end"`
 		Window string `json:"arrival_window"`
 	} `json:"schedule"`
+	LineItems []LineItem `json:"line_items"`
 	Employees []string `json:"assigned_employee_ids"`
 }
 
