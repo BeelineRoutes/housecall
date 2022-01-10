@@ -15,7 +15,6 @@ import (
 	"time"
 	"strings"
 	"strconv"
-	"math"
 )
 
   //-----------------------------------------------------------------------------------------------------------------------//
@@ -228,21 +227,6 @@ func (this *Schedule) DaySchedules (loc *time.Location) ([]daySchedule, error) {
 		}
 
 		// at this point we know our ealiest start and latest end for the date, so set them in our daySchedule
-		if int(late.Sub(early).Hours()) > 0 { // we need to do this if they have "some" schedule on this day
-			// make sure the duration is at least n hours, otherwise things get tricky with find the appointments in a day for a crew
-			for late.Sub(early).Hours() < 6 {
-				e, _ := strconv.Atoi(early.Format("15")) // I want the 24 hour version as an integer
-				l, _ := strconv.Atoi(late.Format("15"))
-
-				if math.Abs(12 - float64(e)) < math.Abs(12 - float64(l)) { // the early time is closer to noon, so move that one
-					// we can do this cause we're in local time so everyone's 12 noon is the same reference point
-					early = early.Add(time.Hour * -1)
-				} else {
-					late = late.Add(time.Hour) // add an hour to later in the day
-				}
-			}
-		}
-
 		day.Start = early.In (utc) // keep everything in utc time
 		day.Duration = late.Sub(early) // if these were never set, it still works out
 
