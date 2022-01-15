@@ -100,6 +100,26 @@ func TestThirdJobScheduleUpdate (t *testing.T) {
 	assert.Equal (t, true, job.Schedule.End.IsZero(), "end is zero")
 }
 
+func TestThirdJobLineItems (t *testing.T) {
+	hc, cfg := newHouseCall (t)
+
+	ctx, cancel := context.WithTimeout (context.Background(), time.Minute) // this should take < 1 minute
+	defer cancel()
+
+	// get our list of jobs, only unscheduled ones
+	lineItems, err := hc.GetLineItems (ctx, cfg.Token, "job_6d1066c319bf4617acfbb9cb038385fb")
+	if err != nil { t.Fatal (err) }
+
+	assert.Equal (t, 2, len(lineItems))
+	assert.Equal (t, "Tasting Flight", lineItems[0].Name)
+	
+	for _, li := range lineItems {
+		t.Logf ("%+v\n", li)
+	}
+	
+}
+
+
 /*
 func TestSimple (t *testing.T) {
 	hc, cfg := newHouseCall (t)

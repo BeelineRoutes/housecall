@@ -15,6 +15,7 @@ import (
 	"time"
 	"strings"
 	"strconv"
+	"encoding/json"
 )
 
   //-----------------------------------------------------------------------------------------------------------------------//
@@ -406,8 +407,9 @@ type LineItem struct {
 	Name string `json:"name"`
 	Description string `json:"description"`
 	UnitPrice int `json:"unit_price"`
-	Quantity int `json:"quantity"`
+	Quantity json.Number `json:"quantity"`
 	UnitCost int `json:"unit_cost"`
+	Kind string `json:"kind"`
 }
 
 type createJob struct {

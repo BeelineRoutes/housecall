@@ -211,3 +211,21 @@ func (this *HouseCall) CreateJob (ctx context.Context, token, customerId, addres
     // we're here, we're good
     return nil
 }
+
+// returns the line items associated with the job
+// this will include all the different "kinds"
+func (this *HouseCall) GetLineItems (ctx context.Context, token, jobId string) ([]*LineItem, error) {
+    header := make(map[string]string)
+    header["Authorization"] = "Bearer " + token 
+
+    var ret struct {
+        Data []*LineItem
+    }
+    
+    errObj, err := this.send (ctx, http.MethodGet, fmt.Sprintf("jobs/%s/line_items", jobId), header, nil, &ret)
+    if err != nil { return nil, errors.WithStack(err) } // bail
+    if errObj != nil { return nil, errObj.Err() } // something else bad
+
+    // we're here, we're good
+    return ret.Data, nil
+}
