@@ -253,6 +253,7 @@ type Employee struct {
 	Color string `json:"color_hex"`
 	Avatar string `json:"avatar_url"`
 	Role string `json:"role"`
+	Tags []string `json:"tags"`
 }
 
 type employeeListResponse struct {
