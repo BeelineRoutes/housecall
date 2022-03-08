@@ -131,7 +131,7 @@ func (this *HouseCall) GetJob (ctx context.Context, token, jobId string) (*Job, 
 // updates the target scheduled time for a job
 // at least 1 employee is required for this
 // if startTime is zero, then this will remove the scheduled time from the job
-func (this *HouseCall) UpdateJobSchedule (ctx context.Context, token, jobId, employeeId string, startTime time.Time, 
+func (this *HouseCall) UpdateJobSchedule (ctx context.Context, token, jobId string, employeeIds []string, startTime time.Time, 
                                             duration, arrivalWindow time.Duration, notifyCustomer bool) error {
 
     header := make(map[string]string)
@@ -151,7 +151,9 @@ func (this *HouseCall) UpdateJobSchedule (ctx context.Context, token, jobId, emp
         }
 
         // add in our assigned employee
-        schedule.DispatchedEmployees = append (schedule.DispatchedEmployees, DispatchedEmployee{employeeId}) 
+        for _, id := range employeeIds {
+            schedule.DispatchedEmployees = append (schedule.DispatchedEmployees, DispatchedEmployee{id}) 
+        }
 
         errObj, err := this.send (ctx, http.MethodPut, fmt.Sprintf("jobs/%s/schedule", jobId), header, schedule, nil)
         if err != nil { return errors.WithStack(err) } // bail
@@ -186,7 +188,7 @@ func (this *HouseCall) UpdateJobDispatch (ctx context.Context, token, jobId stri
 // creates a new job in the system
 func (this *HouseCall) CreateJob (ctx context.Context, token, customerId, addressId string, 
                                     startTime time.Time, duration, arrivalWindow time.Duration, 
-                                    employeeId string, lineItems []LineItem) error {
+                                    employeeIds []string, lineItems []LineItem) error {
     header := make(map[string]string)
     header["Authorization"] = "Bearer " + token 
     header["Content-Type"] = "application/json; charset=utf-8"
@@ -198,7 +200,9 @@ func (this *HouseCall) CreateJob (ctx context.Context, token, customerId, addres
     }
 
     // add in our employee
-    job.Employees = append (job.Employees, employeeId) 
+    for _, id := range employeeIds {
+        job.Employees = append (job.Employees, id) 
+    }
     
     job.Schedule.Start = startTime
     job.Schedule.End = startTime.Add (duration)
