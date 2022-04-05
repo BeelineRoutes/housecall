@@ -423,6 +423,7 @@ type createJob struct {
 	} `json:"schedule"`
 	LineItems []LineItem `json:"line_items"`
 	Employees []string `json:"assigned_employee_ids"`
+	Tags []string `json:"tags"`
 }
 
 //----- PUBLIC ---------------------------------------------------------------------------------------------------------//
