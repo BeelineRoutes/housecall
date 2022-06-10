@@ -188,7 +188,7 @@ func (this *HouseCall) UpdateJobDispatch (ctx context.Context, token, jobId stri
 // creates a new job in the system
 func (this *HouseCall) CreateJob (ctx context.Context, token, customerId, addressId string, 
                                     startTime time.Time, duration, arrivalWindow time.Duration, 
-                                    employeeIds, tags []string, lineItems []LineItem) error {
+                                    employeeIds, tags []string, lineItems []LineItem, leadSource string) error {
     header := make(map[string]string)
     header["Authorization"] = "Bearer " + token 
     header["Content-Type"] = "application/json; charset=utf-8"
@@ -198,6 +198,7 @@ func (this *HouseCall) CreateJob (ctx context.Context, token, customerId, addres
         AddressId: addressId,
         LineItems: lineItems,
         Tags: tags,
+        LeadSource: leadSource,
     }
 
     // add in our employee

@@ -327,6 +327,7 @@ type Customer struct {
 	Notifications bool `json:"notifications_enabled"`
 	Tags []string `json:"tags"`
 	Addresses []Address `json:"addresses"`
+	LeadSource string `json:"lead_source"`
 }
 
 type customerListResponse struct {
@@ -360,6 +361,7 @@ type Job struct {
 		Started time.Time `json:"started_at"`
 		Completed time.Time `json:"completed_at"`
 	} `json:"work_timestamps"`
+	LeadSource string `json:"lead_source"`
 }
 
 // returns that the job is in a state where the job is still expected to be completed in the future
@@ -424,6 +426,57 @@ type createJob struct {
 	LineItems []LineItem `json:"line_items"`
 	Employees []string `json:"assigned_employee_ids"`
 	Tags []string `json:"tags"`
+	LeadSource string `json:"lead_source"`
+}
+
+//----- ESTIMATES -------------------------------------------------------------------------------------------------------//
+
+type Estimate struct {
+	Id string `json:"id"`
+	EstimateNumber string `json:"estimate_number"`
+	WorkStatus WorkStatus `json:"work_status"`
+	LeadSource string `json:"lead_source"`
+	Customer Customer
+	Address Address `json:"address"`
+	WorkTimestamps struct {
+		OnMyWay time.Time `json:"on_my_way_at"`
+		Started time.Time `json:"started_at"`
+		Completed time.Time `json:"completed_at"`
+	} `json:"work_timestamps"`
+	Schedule struct {
+		Start time.Time `json:"scheduled_start"`
+		End time.Time `json:"scheduled_end"`
+		Window int `json:"arrival_window"`
+	}
+	AssignedEmployees [] Employee `json:"assigned_employees"`
+	Options []struct {
+		Id string `json:"id"`
+		Name string `json:"name"`
+		OptionNumber string `json:"option_number"`
+		TotalAmount string `json:"total_amount"`
+		ApprovalStatus string `json:"approval_status"`
+		MessageFromPro string `json:"message_from_pro"`
+	}	
+}
+
+type estimateListResponse struct {
+	Estimates []Estimate `json:"estimates"`
+	TotalItems int `json:"total_items"`
+	TotalPages int `json:"total_pages"`
+}
+
+type createEstimate struct {
+	CustomerId string `json:"customer_id"`
+	AddressId string `json:"address_id"`
+	Schedule struct {
+		Start time.Time `json:"start_time"`
+		End time.Time `json:"end_time"`
+		Window string `json:"arrival_window_in_minutes"`
+		NotifyCustomer bool `json:"notify_customer"`
+	} `json:"schedule"`
+	Employees []string `json:"assigned_employee_ids"`
+	Tags []string `json:"tags"`
+	LeadSource string `json:"lead_source"`
 }
 
 //----- PUBLIC ---------------------------------------------------------------------------------------------------------//
