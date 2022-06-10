@@ -327,7 +327,7 @@ type Customer struct {
 	Notifications bool `json:"notifications_enabled"`
 	Tags []string `json:"tags"`
 	Addresses []Address `json:"addresses"`
-	LeadSource string `json:"lead_source"`
+	LeadSource string `json:"lead_source,omitempty"`
 }
 
 type customerListResponse struct {
@@ -361,7 +361,7 @@ type Job struct {
 		Started time.Time `json:"started_at"`
 		Completed time.Time `json:"completed_at"`
 	} `json:"work_timestamps"`
-	LeadSource string `json:"lead_source"`
+	LeadSource string `json:"lead_source,omitempty"`
 }
 
 // returns that the job is in a state where the job is still expected to be completed in the future
@@ -426,7 +426,7 @@ type createJob struct {
 	LineItems []LineItem `json:"line_items"`
 	Employees []string `json:"assigned_employee_ids"`
 	Tags []string `json:"tags"`
-	LeadSource string `json:"lead_source"`
+	LeadSource string `json:"lead_source,omitempty"`
 }
 
 //----- ESTIMATES -------------------------------------------------------------------------------------------------------//
@@ -435,7 +435,7 @@ type Estimate struct {
 	Id string `json:"id"`
 	EstimateNumber string `json:"estimate_number"`
 	WorkStatus WorkStatus `json:"work_status"`
-	LeadSource string `json:"lead_source"`
+	LeadSource string `json:"lead_source,omitempty"`
 	Customer Customer
 	Address Address `json:"address"`
 	WorkTimestamps struct {
@@ -476,7 +476,7 @@ type createEstimate struct {
 	} `json:"schedule"`
 	Employees []string `json:"assigned_employee_ids"`
 	Tags []string `json:"tags"`
-	LeadSource string `json:"lead_source"`
+	LeadSource string `json:"lead_source,omitempty"`
 }
 
 //----- PUBLIC ---------------------------------------------------------------------------------------------------------//
