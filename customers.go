@@ -37,7 +37,7 @@ func (this *HouseCall) SearchCustomers (ctx context.Context, token, search strin
 
     var ret []Customer
 
-    for i := 1; i <= 1000; i++ { // stay in a loop as long as we're pulling jobs
+    for i := 1; i <= 10; i++ { // stay in a loop as long as we're pulling jobs
         params.Set("page", fmt.Sprintf("%d", i)) // set our next page
 
         resp := customerListResponse{}
@@ -51,7 +51,7 @@ func (this *HouseCall) SearchCustomers (ctx context.Context, token, search strin
         
         if i >= resp.TotalPages { return ret, nil } // we finished
     }
-    // this only happens if we have too many pages... shouldn't happen anyway, but return what we got
+    // this only happens if we have too many pages... meaning more than 2k customers
     return ret, nil 
 }
 

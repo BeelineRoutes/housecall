@@ -33,7 +33,7 @@ func (this *HouseCall) ListEmployees (ctx context.Context, token string) ([]Empl
     params.Set("sort_direction", "asc")
     params.Set("sort_by", "last_name")
 
-    for i := 1; i <= 10000; i++ { // stay in a loop as long as we're pulling employees
+    for i := 1; i <= 20; i++ { // stay in a loop as long as we're pulling employees
         params.Set("page", fmt.Sprintf("%d", i)) // set our next page
         resp := employeeListResponse{}
         

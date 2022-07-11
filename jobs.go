@@ -68,7 +68,7 @@ func (this *HouseCall) ListJobs (ctx context.Context, token string, start, finis
     params.Set("scheduled_start_min", start.Format(time.RFC3339))
     params.Set("scheduled_start_max", finish.Format(time.RFC3339))
     
-    for i := 1; i <= 1000; i++ { // stay in a loop as long as we're pulling jobs
+    for i := 1; i <= 100; i++ { // stay in a loop as long as we're pulling jobs
         params.Set("page", fmt.Sprintf("%d", i)) // set our next page
         resp := jobListResponse{}
         
@@ -97,7 +97,7 @@ func (this *HouseCall) ListJobsFromEmployee (ctx context.Context, token string, 
     params.Set("scheduled_start_max", finish.Format(time.RFC3339))
     params.Set("employee_ids[]", employeeId)
     
-    for i := 1; i <= 1000; i++ { // stay in a loop as long as we're pulling jobs
+    for i := 1; i <= 100; i++ { // stay in a loop as long as we're pulling jobs
         params.Set("page", fmt.Sprintf("%d", i)) // set our next page
         resp := jobListResponse{}
         
