@@ -113,6 +113,32 @@ func (this *HouseCall) ListJobsFromEmployee (ctx context.Context, token string, 
     return ret, errors.Errorf ("received over %d jobs in your history", len(ret))
 }
 
+// returns a list of jobs that are associated with the customer
+func (this *HouseCall) ListJobsFromCustomer (ctx context.Context, token string, customerId string) ([]Job, error) {
+    ret := make([]Job, 0) // main list to return
+    header := make(map[string]string)
+    header["Authorization"] = "Bearer " + token 
+
+    params := url.Values{}
+    params.Set("page_size", "200")
+    params.Set("customer_id", customerId)
+    
+    for i := 1; i <= 100; i++ { // stay in a loop as long as we're pulling jobs
+        params.Set("page", fmt.Sprintf("%d", i)) // set our next page
+        resp := jobListResponse{}
+        
+        errObj, err := this.send (ctx, http.MethodGet, fmt.Sprintf("jobs?%s", params.Encode()), header, nil, &resp)
+        if err != nil { return nil, errors.WithStack(err) } // bail
+        if errObj != nil { return nil, errObj.Err() } // something else bad
+
+        // we're here, we're good
+        ret = append (ret, resp.Jobs...)
+        
+        if i >= resp.TotalPages { return ret, nil } // we finished
+    }
+    return ret, errors.Errorf ("received over %d jobs in your history", len(ret))
+}
+
 // gets the info about a specific job
 func (this *HouseCall) GetJob (ctx context.Context, token, jobId string) (*Job, error) {
     header := make(map[string]string)
