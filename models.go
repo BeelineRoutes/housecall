@@ -435,7 +435,7 @@ type Estimate struct {
 	Id string `json:"id"`
 	EstimateNumber string `json:"estimate_number"`
 	WorkStatus WorkStatus `json:"work_status"`
-	LeadSource string `json:"lead_source,omitempty"`
+	// LeadSource string `json:"lead_source,omitempty"`
 	Customer Customer
 	Address Address `json:"address"`
 	WorkTimestamps struct {
@@ -459,15 +459,31 @@ type Estimate struct {
 	}	
 }
 
+// returns that the job is in a state where the job is still expected to be completed in the future
+func (this *Estimate) IsPending () bool {
+	switch this.WorkStatus {
+	case WorkStatus_scheduled, WorkStatus_needsScheduling:
+		return true
+	}
+	return false // this is in a state where the job has been cancelled or already started
+}
+
 type estimateListResponse struct {
 	Estimates []Estimate `json:"estimates"`
 	TotalItems int `json:"total_items"`
 	TotalPages int `json:"total_pages"`
 }
 
+type CreateEstimateOption struct {
+	Name string `json:"name"`
+	LineItems []LineItem
+}
+
 type createEstimate struct {
 	CustomerId string `json:"customer_id"`
 	AddressId string `json:"address_id"`
+	Note string `json:"note"`
+	Message string `json:"message"`
 	Schedule struct {
 		Start time.Time `json:"start_time"`
 		End time.Time `json:"end_time"`
@@ -477,6 +493,7 @@ type createEstimate struct {
 	Employees []string `json:"assigned_employee_ids"`
 	Tags []string `json:"tags"`
 	LeadSource string `json:"lead_source,omitempty"`
+	Options []CreateEstimateOption `json:"options"`
 }
 
 //----- PUBLIC ---------------------------------------------------------------------------------------------------------//

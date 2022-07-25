@@ -66,7 +66,9 @@ func (this *HouseCall) ListEstimates (ctx context.Context, token string, employe
     params.Set("sort_direction", "desc")
     params.Set("scheduled_start_min", start.Format(time.RFC3339))
     params.Set("scheduled_start_max", finish.Format(time.RFC3339))
-    params.Set("employee_ids[]", employeeId)
+    if len(employeeId) > 0 {
+        params.Set("employee_ids[]", employeeId)
+    }
     
     for i := 1; i <= 100; i++ { // stay in a loop as long as we're pulling estimates
         params.Set("page", fmt.Sprintf("%d", i)) // set our next page
@@ -140,17 +142,21 @@ func (this *HouseCall) UpdateEstimateSchedule (ctx context.Context, token, estId
 // creates a new estimate in the system
 func (this *HouseCall) CreateEstimate (ctx context.Context, token, customerId, addressId string, 
                                     startTime time.Time, duration, arrivalWindow time.Duration, notifyCustomer bool,
-                                    employeeIds, tags []string, leadSource string) (*Estimate, error) {
+                                    employeeIds, tags []string, leadSource, note, message string, 
+                                    options []CreateEstimateOption) (*Estimate, error) {
     header := make(map[string]string)
     header["Authorization"] = "Bearer " + token 
     header["Content-Type"] = "application/json; charset=utf-8"
     
     est := &createEstimate {
+        Note: note,
+        Message: message,
         CustomerId: customerId,
         AddressId: addressId,
         Tags: tags,
         LeadSource: leadSource,
         Employees: employeeIds,
+        Options: options,
     }
 
     est.Schedule.Start = startTime
