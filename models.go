@@ -453,7 +453,7 @@ type Estimate struct {
 		Id string `json:"id"`
 		Name string `json:"name"`
 		OptionNumber string `json:"option_number"`
-		TotalAmount string `json:"total_amount"`
+		TotalAmount int64 `json:"total_amount"`
 		ApprovalStatus string `json:"approval_status"`
 		MessageFromPro string `json:"message_from_pro"`
 	}	
