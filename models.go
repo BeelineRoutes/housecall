@@ -476,7 +476,7 @@ type estimateListResponse struct {
 
 type CreateEstimateOption struct {
 	Name string `json:"name"`
-	LineItems []LineItem
+	LineItems []LineItem `json:"line_items"`
 }
 
 type createEstimate struct {
