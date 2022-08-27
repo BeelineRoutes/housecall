@@ -496,6 +496,26 @@ type createEstimate struct {
 	Options []CreateEstimateOption `json:"options"`
 }
 
+//----- EVENTS ---------------------------------------------------------------------------------------------------------//
+
+type Event struct {
+	Id string `json:"id"`
+	Note string `json:"note"`
+	AssignedEmployees [] Employee `json:"assigned_employees"`
+	Schedule struct {
+		Start time.Time `json:"start_time"`
+		End time.Time `json:"end_time"`
+		TimeZone string `json:"time_zone"`
+	} `json:"schedule"`
+}
+
+type eventListResponse struct {
+	Events []Event `json:"events"`
+	TotalItems int `json:"total_items"`
+	TotalPages int `json:"total_pages"`
+}
+
+
 //----- PUBLIC ---------------------------------------------------------------------------------------------------------//
 
 type HouseCall struct {
