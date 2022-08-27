@@ -500,6 +500,7 @@ type createEstimate struct {
 
 type Event struct {
 	Id string `json:"id"`
+	Name string `json:"name"`
 	Note string `json:"note"`
 	AssignedEmployees [] Employee `json:"assigned_employees"`
 	Schedule struct {
