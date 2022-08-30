@@ -556,6 +556,11 @@ func (this Event) parseRecurrence ()  (*recurrence, error) {
 
 	ret.days = ret.freq * ret.interval // calculate out days between starts
 
+	if ret.until.IsZero() && ret.count == 0 {
+		// not set, so just go out 1 year from now
+		ret.until = time.Now().AddDate(1, 0, 0)
+	}
+
 	return ret, nil 
 }
 
