@@ -48,7 +48,10 @@ func (this *HouseCall) ListEvents (ctx context.Context, token string, start, end
         // we're here, we're good
         // make sure this event fits within the range
         for _, event := range resp.Events {
-            if event.Schedule.Start.Before(end) && event.Schedule.End.After(start) {
+            start, end, err := event.scheduleRange()
+            if err != nil { return nil, err } // bailing hard 
+
+            if start.Before(end) && end.After(start) {
                 ret = append (ret, event)
             }
         }

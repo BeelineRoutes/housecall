@@ -498,6 +498,11 @@ type createEstimate struct {
 
 //----- EVENTS ---------------------------------------------------------------------------------------------------------//
 
+type recurrence struct {
+	freq, count, interval, months, days int 
+	until time.Time 
+}
+
 type Event struct {
 	Id string `json:"id"`
 	Name string `json:"name"`
@@ -511,6 +516,68 @@ type Event struct {
 	} `json:"schedule"`
 }
 
+
+func (this Event) parseRecurrence ()  (*recurrence, error) {
+	ret := &recurrence{
+		interval: 1, // default this 
+	}
+	var err error 
+	
+	for _, tok := range strings.Split(this.Recurrence, ";") { // split it based on semicolons
+		// now beak the equal sign out
+		parts := strings.Split(tok, "=")
+		switch parts[0] {
+		case "FREQ":
+			switch parts[1] {
+			case "DAILY":
+				ret.freq = 1
+			case "WEEKLY":
+				ret.freq = 7
+			case "MONTHLY":
+				ret.months = 1
+			default:
+				return nil, errors.Errorf("Unknown frequency : %s", this.Recurrence)
+			}
+
+		case "INTERVAL": // this only gets set if it's not 1
+			ret.interval, err = strconv.Atoi(parts[1])
+			if err != nil { return nil, errors.Wrapf(err, "interval : %s", this.Recurrence) }
+
+		case "UNTIL":
+			ret.until, err = time.Parse("20060102T150405Z", parts[1])
+			if err != nil { return nil, errors.Wrapf(err, this.Recurrence) }
+
+		case "COUNT":
+			ret.count, err = strconv.Atoi(parts[1])
+			if err != nil { return nil, errors.Wrapf(err, "count : %s", this.Recurrence) }
+
+		}
+	}
+
+	ret.days = ret.freq * ret.interval // calculate out days between starts
+
+	return ret, nil 
+}
+
+// figure out the full start and end date/times for this event
+func (this Event) scheduleRange () (time.Time, time.Time, error) {
+	if len(this.Recurrence) == 0 { return this.Schedule.Start, this.Schedule.End, nil } // just as it is
+
+	recur, err := this.parseRecurrence()
+	if err != nil { return time.Time{}, time.Time{}, err } // bail 
+
+	if recur.until.IsZero() {
+		// use the count
+		recur.count--
+		return this.Schedule.Start.AddDate(0, recur.months * recur.count, recur.days * recur.count),
+			this.Schedule.End.AddDate(0, recur.months * recur.count, recur.days * recur.count), nil
+
+	} else {
+		// we have a target end date, so just use that
+		return this.Schedule.Start, recur.until, nil 
+	}
+}
+
 // creates a list of event objects based on the recurrence schedule
 // "FREQ=WEEKLY;INTERVAL=2;UNTIL=20221128T070000Z;BYDAY=SA"
 func (this Event) ExtractRecurrence () (events []Event, err error) {
@@ -519,71 +586,34 @@ func (this Event) ExtractRecurrence () (events []Event, err error) {
 	if len(this.Recurrence) == 0 { return } // no recurrence, it's just this event
 
 	// figure it out
-	var freq, count int
-	interval := 1 // default to 1
-	monthly := false 
-	var until time.Time 
+	recur, err := this.parseRecurrence()
+	if err != nil { return nil, err }
 
-	for _, tok := range strings.Split(this.Recurrence, ";") { // split it based on semicolons
-		// now beak the equal sign out
-		parts := strings.Split(tok, "=")
-		switch parts[0] {
-		case "FREQ":
-			switch parts[1] {
-			case "DAILY":
-				freq = 1
-			case "WEEKLY":
-				freq = 7
-			case "MONTHLY":
-				monthly = true 
-			default:
-				return nil, errors.Errorf("Unknown frequency : %s", this.Recurrence)
-			}
-
-		case "INTERVAL": // this only gets set if it's not 1
-			interval, err = strconv.Atoi(parts[1])
-			if err != nil { return nil, errors.Wrapf(err, "interval : %s", this.Recurrence) }
-
-		case "UNTIL":
-			until, err = time.Parse("20060102T150405Z", parts[1])
-			if err != nil { return nil, errors.Wrapf(err, this.Recurrence) }
-
-		case "COUNT":
-			count, err = strconv.Atoi(parts[1])
-			if err != nil { return nil, errors.Wrapf(err, "count : %s", this.Recurrence) }
-
-		}
-	}
-
+	if recur.months == 0 && recur.days == 0 { return nil, errors.Errorf("Couldn't find a frequency : %s", this.Recurrence) }
+	
 	// make sure we got some expected things
-	if until.IsZero() && count == 0 { return nil, errors.Errorf("Missing until date : %s", this.Recurrence) }
+	if recur.until.IsZero() && recur.count == 0 { return nil, errors.Errorf("Missing until date : %s", this.Recurrence) }
 
 	// now start adding to our return object
 	jstr, err := json.Marshal(this) // doing the copying using marshalling
 	if err != nil {	return nil, errors.WithStack(err) }
 
-	var months, days int 
-	if monthly { months = 1 }
-	days = freq * interval
-
-	if months == 0 && days == 0 { return nil, errors.Errorf("Couldn't find a frequency : %s", this.Recurrence) }
-
 	// we keep looping
 	for {
-		count-- // remove one from our count, in case we're using that as our limit 
+		recur.count-- // remove one from our count, in case we're using that as our limit 
 
 		nextEvent := Event{}
 		err = json.Unmarshal(jstr, &nextEvent) // create our new object based on the last event
 		if err != nil {	return nil, errors.WithStack(err) }
 
 		// add it to the start and end
-		nextEvent.Schedule.Start = nextEvent.Schedule.Start.AddDate(0, months, days)
-		nextEvent.Schedule.End = nextEvent.Schedule.End.AddDate(0, months, days)
+		nextEvent.Schedule.Start = nextEvent.Schedule.Start.AddDate(0, recur.months, recur.days)
+		nextEvent.Schedule.End = nextEvent.Schedule.End.AddDate(0, recur.months, recur.days)
 
 		// TODO figure out the timezone shift here
 
 		// check to see if we're done
-		if count <= 0 && nextEvent.Schedule.Start.After(until) { break } // we're done
+		if recur.count <= 0 && nextEvent.Schedule.Start.After(recur.until) { break } // we're done
 
 		events = append(events, nextEvent)
 		jstr, err = json.Marshal(nextEvent) // update this byte string for next time
