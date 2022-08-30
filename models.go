@@ -519,7 +519,7 @@ func (this Event) ExtractRecurrence () (events []Event, err error) {
 	if len(this.Recurrence) == 0 { return } // no recurrence, it's just this event
 
 	// figure it out
-	freq := 0
+	var freq, count int
 	interval := 1 // default to 1
 	monthly := false 
 	var until time.Time 
@@ -542,17 +542,21 @@ func (this Event) ExtractRecurrence () (events []Event, err error) {
 
 		case "INTERVAL": // this only gets set if it's not 1
 			interval, err = strconv.Atoi(parts[1])
-			if err != nil { return nil, errors.Wrapf(err, this.Recurrence) }
+			if err != nil { return nil, errors.Wrapf(err, "interval : %s", this.Recurrence) }
 
 		case "UNTIL":
 			until, err = time.Parse("20060102T150405Z", parts[1])
 			if err != nil { return nil, errors.Wrapf(err, this.Recurrence) }
 
+		case "COUNT":
+			count, err = strconv.Atoi(parts[1])
+			if err != nil { return nil, errors.Wrapf(err, "count : %s", this.Recurrence) }
+
 		}
 	}
 
 	// make sure we got some expected things
-	if until.IsZero() { return nil, errors.Errorf("Missing until date : %s", this.Recurrence) }
+	if until.IsZero() && count == 0 { return nil, errors.Errorf("Missing until date : %s", this.Recurrence) }
 
 	// now start adding to our return object
 	jstr, err := json.Marshal(this) // doing the copying using marshalling
@@ -566,6 +570,8 @@ func (this Event) ExtractRecurrence () (events []Event, err error) {
 
 	// we keep looping
 	for {
+		count-- // remove one from our count, in case we're using that as our limit 
+
 		nextEvent := Event{}
 		err = json.Unmarshal(jstr, &nextEvent) // create our new object based on the last event
 		if err != nil {	return nil, errors.WithStack(err) }
@@ -577,7 +583,7 @@ func (this Event) ExtractRecurrence () (events []Event, err error) {
 		// TODO figure out the timezone shift here
 
 		// check to see if we're done
-		if nextEvent.Schedule.Start.After(until) { break } // we're done
+		if count <= 0 && nextEvent.Schedule.Start.After(until) { break } // we're done
 
 		events = append(events, nextEvent)
 		jstr, err = json.Marshal(nextEvent) // update this byte string for next time

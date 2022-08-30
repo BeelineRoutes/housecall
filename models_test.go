@@ -134,6 +134,18 @@ func TestFirstModelsEvent2 (t *testing.T) {
 	assert.Equal (t, "2022-09-17", events[2].Schedule.Start.Format("2006-01-02"))
 }
 
+func TestFirstModelsEvent3 (t *testing.T) {
+	event := &Event{}
+	err := json.Unmarshal ([]byte(`{"id":"evt_608c05349bda4bdf9e92529c07342c55","name":"timeoff","note":null,"tags":[],"recurrence_rule":"FREQ=WEEKLY;COUNT=2;BYDAY=FR","address":{"street":null,"street_line_2":null,"city":null,"state":null,"zip":null},"assigned_employees":[{"id":"pro_d9edbbaec96f4657a500dc3b4ef00ab3","first_name":"Nathan","last_name":"Thomas","email":"nathan@necustomsoftware.com","mobile_number":"6175433004","color_hex":"EF9159","avatar_url":"https://housecall-attachments-production.s3.amazonaws.com/service_pros/avatars/000/478/416/thumb/avatar_1643977554.png?1643977554","role":"field tech","tags":["Level 2","Cleaner"],"permissions":{"can_add_and_edit_job":true,"can_be_booked_online":true,"can_call_and_text_with_customers":true,"can_chat_with_customers":true,"can_delete_and_cancel_job":true,"can_edit_message_on_invoice":true,"can_see_street_view_data":true,"can_share_job":true,"can_take_payment_see_prices":true,"can_see_customers":true,"can_see_full_schedule":true,"can_see_future_jobs":true,"can_see_marketing_campaigns":true,"can_see_reporting":true,"can_edit_settings":true,"is_point_of_contact":false,"is_admin":true},"company_name":"Genie Mobile","company_id":"168e9244-1b50-47c0-8a14-4a1d94433a75"}],"schedule":{"start_time":"2022-09-02T11:00:00Z","end_time":"2022-09-02T23:00:00Z","time_zone":"America/New_York"},"all_day":false,"company_name":"Genie Mobile","company_id":"168e9244-1b50-47c0-8a14-4a1d94433a75"}`), event)
+	if err != nil { t.Fatal (err) }
+
+	events, err := event.ExtractRecurrence()
+	if err != nil { t.Fatal(err) }
+	assert.Equal(t, 2, len(events))
+	assert.Equal (t, "2022-09-02", events[0].Schedule.Start.Format("2006-01-02"))
+	assert.Equal (t, "2022-09-09", events[1].Schedule.Start.Format("2006-01-02"))
+}
+
 
 //----- SCHEDULE -------------------------------------------------------------------------------------------------------//
 
