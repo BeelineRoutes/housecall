@@ -165,9 +165,19 @@ func TestFirstModelsEvent5 (t *testing.T) {
 
 	events, err := event.ExtractRecurrence()
 	if err != nil { t.Fatal(err) }
+
+	/*
+	for _, e := range events {
+		t.Logf("%s\n", e.Schedule.Start)
+	}
+	*/
+	
 	assert.Equal(t, 52, len(events))
-	assert.Equal (t, "2022-09-04", events[0].Schedule.Start.Format("2006-01-02"))
-	assert.Equal (t, "2022-11-27", events[12].Schedule.Start.Format("2006-01-02"))
+	assert.Equal (t, "2022-09-04 14", events[0].Schedule.Start.Format("2006-01-02 15"))
+	// start of end of daylight savings
+	assert.Equal (t, "2022-11-06 15", events[9].Schedule.Start.Format("2006-01-02 15"))
+	// daylight savings
+	assert.Equal (t, "2023-03-12 14", events[27].Schedule.Start.Format("2006-01-02 15"))
 }
 
 

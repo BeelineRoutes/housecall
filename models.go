@@ -603,6 +603,18 @@ func (this Event) ExtractRecurrence () (events []Event, err error) {
 	jstr, err := json.Marshal(this) // doing the copying using marshalling
 	if err != nil {	return nil, errors.WithStack(err) }
 
+	// we need to know the location and timezone, to this is so if the recurrence travels over daylight savings switches
+	loc, err := time.LoadLocation(this.Schedule.TimeZone)
+	if err != nil {
+		fmt.Printf ("ERROR loading location :: event id: %s :: timezone: %s\n", this.Id, this.Schedule.TimeZone)
+		loc, _ = time.LoadLocation("America/Chicago") // default so it works
+	}
+
+	// now figure out a time in the local timezone, this is what we keep ramping, so that this always returns
+	// an event with the start/end times in UTC
+	localStart := this.Schedule.Start.In(loc) // start is in utc, localStart is in whatever timezone this event is in
+	localEnd := this.Schedule.End.In(loc)
+
 	// we keep looping
 	for {
 		recur.count-- // remove one from our count, in case we're using that as our limit 
@@ -612,10 +624,11 @@ func (this Event) ExtractRecurrence () (events []Event, err error) {
 		if err != nil {	return nil, errors.WithStack(err) }
 
 		// add it to the start and end
-		nextEvent.Schedule.Start = nextEvent.Schedule.Start.AddDate(0, recur.months, recur.days)
-		nextEvent.Schedule.End = nextEvent.Schedule.End.AddDate(0, recur.months, recur.days)
+		localStart = localStart.AddDate(0, recur.months, recur.days)
+		localEnd = localEnd.AddDate(0, recur.months, recur.days)
 
-		// TODO figure out the timezone shift here
+		nextEvent.Schedule.Start = localStart.In(time.UTC) // these stay in utc
+		nextEvent.Schedule.End = localEnd.In(time.UTC)
 
 		// check to see if we're done
 		if recur.count <= 0 && nextEvent.Schedule.Start.After(recur.until) { break } // we're done
