@@ -81,7 +81,7 @@ func (this *HouseCall) ListJobs (ctx context.Context, token string, start, finis
         
         if i >= resp.TotalPages { return ret, nil } // we finished
     }
-    return ret, errors.Errorf ("received over %d jobs in your history", len(ret))
+    return ret, errors.Wrapf (ErrTooManyRecords, "received over %d jobs in your history", len(ret))
 }
 
 // returns a list of jobs for a specific employee over the target date range
@@ -110,7 +110,7 @@ func (this *HouseCall) ListJobsFromEmployee (ctx context.Context, token string, 
         
         if i >= resp.TotalPages { return ret, nil } // we finished
     }
-    return ret, errors.Errorf ("received over %d jobs in your history", len(ret))
+    return ret, errors.Wrapf (ErrTooManyRecords, "received over %d jobs in your history", len(ret))
 }
 
 // returns a list of jobs that are associated with the customer
@@ -136,7 +136,7 @@ func (this *HouseCall) ListJobsFromCustomer (ctx context.Context, token string, 
         
         if i >= resp.TotalPages { return ret, nil } // we finished
     }
-    return ret, errors.Errorf ("received over %d jobs in your history", len(ret))
+    return ret, errors.Wrapf (ErrTooManyRecords, "received over %d jobs in your history", len(ret))
 }
 
 // gets the info about a specific job

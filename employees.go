@@ -46,6 +46,6 @@ func (this *HouseCall) ListEmployees (ctx context.Context, token string) ([]Empl
 
         if i >= resp.TotalPages { return ret, nil } // we finished
     }
-    return ret, errors.Errorf ("received over %d employees", len(ret))
+    return ret, errors.Wrapf (ErrTooManyRecords, "received over %d employees", len(ret))
 }
 

@@ -83,7 +83,7 @@ func (this *HouseCall) ListEstimates (ctx context.Context, token string, employe
         
         if i >= resp.TotalPages { return ret, nil } // we finished
     }
-    return ret, errors.Errorf ("received over %d estimates in your history", len(ret))
+    return ret, errors.Wrapf (ErrTooManyRecords, "received over %d estimates in your history", len(ret))
 }
 
 // gets the info about a specific estimate

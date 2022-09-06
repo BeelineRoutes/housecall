@@ -42,6 +42,7 @@ const apiURL = "https://api.housecallpro.com"
 var (
 	ErrInvalidCode 		= errors.New("OAuth code not valid")
 	ErrAuthExpired		= errors.New("OAuth expired")
+	ErrTooManyRecords	= errors.New("Too many records returned")
 )
 
   //-----------------------------------------------------------------------------------------------------------------------//

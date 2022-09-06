@@ -52,7 +52,7 @@ func (this *HouseCall) SearchCustomers (ctx context.Context, token, search strin
         if i >= resp.TotalPages { return ret, nil } // we finished
     }
     // this only happens if we have too many pages... meaning more than 2k customers
-    return ret, nil 
+    return ret, ErrTooManyRecords 
 }
 
 // creates the customer and returns their id

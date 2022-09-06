@@ -58,6 +58,6 @@ func (this *HouseCall) ListEvents (ctx context.Context, token string, start, end
 
         if i >= resp.TotalPages { return ret, nil } // we finished
     }
-    return ret, errors.Errorf ("received over %d events in your history", len(ret))
+    return ret, errors.Wrapf (ErrTooManyRecords, "received over %d events in your history", len(ret))
 }
 
