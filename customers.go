@@ -55,6 +55,31 @@ func (this *HouseCall) SearchCustomers (ctx context.Context, token, search strin
     return ret, ErrTooManyRecords 
 }
 
+// used to request a specific page for customers
+// allows us to check for newly created ones as well as move back in time.
+func (this *HouseCall) PageCustomers (ctx context.Context, token string, page int) ([]Customer, error) {
+    header := make(map[string]string)
+    header["Authorization"] = "Bearer " + token 
+
+    params := url.Values{}
+    params.Set("page_size", "200")
+    params.Set("sort_direction", "desc")
+    params.Set("sort_by", "created_at")
+    params.Set("q", "")
+
+    // set our page 
+    if page <= 0 { page = 1 }
+    params.Set("page", fmt.Sprintf("%d", page))
+
+    resp := customerListResponse{}
+
+    errObj, err := this.send (ctx, http.MethodGet, fmt.Sprintf("customers?%s", params.Encode()), header, nil, &resp)
+    if err != nil { return nil, errors.WithStack(err) } // bail
+    if errObj != nil { return nil, errObj.Err() } // something else bad
+
+    return resp.Customers, nil 
+}
+
 // creates the customer and returns their id
 func (this *HouseCall) CreateCustomer (ctx context.Context, token string, customer *Customer) error {
 
