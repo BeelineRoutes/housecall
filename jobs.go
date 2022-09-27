@@ -105,6 +105,35 @@ func (this *HouseCall) ListJobs (ctx context.Context, token string, start, finis
     return ret, errors.Wrapf (ErrTooManyRecords, "received over %d jobs in your history", len(ret))
 }
 
+// returns all jobs that are within our start and finish ranges
+func (this *HouseCall) ListMissedJobs (ctx context.Context, token string, start, finish time.Time) ([]Job, error) {
+    ret := make([]Job, 0) // main list to return
+    header := make(map[string]string)
+    header["Authorization"] = "Bearer " + token 
+
+    params := url.Values{}
+    params.Set("page_size", "200")
+    params.Set("sort_direction", "desc")
+    params.Set("scheduled_start_min", start.Format(time.RFC3339))
+    params.Set("scheduled_start_max", finish.Format(time.RFC3339))
+    params.Set("work_status[]", "scheduled")
+    
+    for i := 1; i <= 10; i++ { // stay in a loop as long as we're pulling jobs
+        params.Set("page", fmt.Sprintf("%d", i)) // set our next page
+        resp := jobListResponse{}
+        
+        errObj, err := this.send (ctx, http.MethodGet, fmt.Sprintf("jobs?%s", params.Encode()), header, nil, &resp)
+        if err != nil { return nil, errors.WithStack(err) } // bail
+        if errObj != nil { return nil, errObj.Err() } // something else bad
+
+        // we're here, we're good
+        ret = append (ret, resp.Jobs...)
+        
+        if i >= resp.TotalPages { return ret, nil } // we finished
+    }
+    return ret, nil // don't error about this
+}
+
 // returns a list of jobs for a specific employee over the target date range
 func (this *HouseCall) ListJobsFromEmployee (ctx context.Context, token string, employeeId string, start, finish time.Time) ([]Job, error) {
     ret := make([]Job, 0) // main list to return
