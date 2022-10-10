@@ -536,6 +536,8 @@ func (this Event) parseRecurrence ()  (*recurrence, error) {
 				ret.freq = 7
 			case "MONTHLY":
 				ret.months = 1
+			case "YEARLY":
+				ret.months = 12
 			default:
 				return nil, errors.Errorf("Unknown frequency : %s", this.Recurrence)
 			}

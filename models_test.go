@@ -180,6 +180,19 @@ func TestFirstModelsEvent5 (t *testing.T) {
 	assert.Equal (t, "2023-03-12 14", events[27].Schedule.Start.Format("2006-01-02 15"))
 }
 
+// yearly subscription
+func TestFirstModelsEvent6 (t *testing.T) {
+	event := &Event{}
+	err := json.Unmarshal ([]byte(`{"id":"evt_1ed7a074a4f046918104e8001b967e05","name":"Call Don Nordvent","note":null,"tags":[],"recurrence_rule":"FREQ=YEARLY;BYMONTH=5;BYMONTHDAY=1","address":{"street":null,"street_line_2":null,"city":null,"state":null,"zip":null},"assigned_employees":[{"id":"pro_45408447a38542689dae07bfc4f405e6","first_name":"Ellana","last_name":"Berendt","email":"Ellana@acerheem.com","mobile_number":"2245882975","color_hex":"ae59ef","avatar_url":"https://housecall-attachments-production.s3.amazonaws.com/service_pros/avatars/000/358/511/thumb/avatar_1608144245.png?1608144245","role":"field tech","tags":[],"permissions":{"can_add_and_edit_job":true,"can_be_booked_online":true,"can_call_and_text_with_customers":true,"can_chat_with_customers":true,"can_delete_and_cancel_job":true,"can_edit_message_on_invoice":true,"can_see_street_view_data":true,"can_share_job":true,"can_take_payment_see_prices":true,"can_see_customers":true,"can_see_full_schedule":true,"can_see_future_jobs":true,"can_see_marketing_campaigns":true,"can_see_reporting":true,"can_edit_settings":true,"is_point_of_contact":true,"is_admin":true},"company_name":"ACE Heating and Cooling","company_id":"b7a03087-10f6-4e68-9be5-900f2ed4a08e"}],"schedule":{"start_time":"2023-05-01T14:00:00Z","end_time":"2023-05-01T15:00:00Z","time_zone":"America/Chicago"},"all_day":false,"company_name":"ACE Heating and Cooling","company_id":"b7a03087-10f6-4e68-9be5-900f2ed4a08e"}`), event)
+	if err != nil { t.Fatal (err) }
+
+	events, err := event.ExtractRecurrence()
+	if err != nil { t.Fatal(err) }
+
+	assert.Equal(t, 1, len(events))
+	assert.Equal (t, "2023-05-01 14", events[0].Schedule.Start.Format("2006-01-02 15"))
+}
+
 
 //----- SCHEDULE -------------------------------------------------------------------------------------------------------//
 
