@@ -501,6 +501,8 @@ type createEstimate struct {
 
 type recurrence struct {
 	freq, count, interval, months, days int 
+	dows [7]bool 
+	byDayCnt, byMonthDay int
 	until time.Time 
 }
 
@@ -523,6 +525,8 @@ func (this Event) parseRecurrence ()  (*recurrence, error) {
 		interval: 1, // default this 
 	}
 	var err error 
+
+	dows := map[string]int{"SU": 0, "MO": 1, "TU": 2, "WE": 3, "TH": 4, "FR": 5, "SA": 6}
 	
 	for _, tok := range strings.Split(this.Recurrence, ";") { // split it based on semicolons
 		// now beak the equal sign out
@@ -554,6 +558,16 @@ func (this Event) parseRecurrence ()  (*recurrence, error) {
 			ret.count, err = strconv.Atoi(parts[1])
 			if err != nil { return nil, errors.Wrapf(err, "count : %s", this.Recurrence) }
 
+		case "BYDAY":
+			// record a true for each day during this week that we want to include an event for
+			for _, day := range strings.Split(parts[1], ",") {
+				ret.dows[dows[day]] = true 
+				ret.byDayCnt++ // so we know how many days are enabled
+			}
+
+		case "BYMONTHDAY":
+			ret.byMonthDay, err = strconv.Atoi(parts[1])
+			if err != nil { return nil, errors.Wrapf(err, "bymonthday : %s", this.Recurrence) }
 		}
 	}
 
@@ -618,27 +632,54 @@ func (this Event) ExtractRecurrence () (events []Event, err error) {
 	localStart := this.Schedule.Start.In(loc) // start is in utc, localStart is in whatever timezone this event is in
 	localEnd := this.Schedule.End.In(loc)
 
-	// we keep looping
+	// we keep looping, we've already included the "first" event
 	for {
 		recur.count-- // remove one from our count, in case we're using that as our limit 
 
-		nextEvent := Event{}
-		err = json.Unmarshal(jstr, &nextEvent) // create our new object based on the last event
-		if err != nil {	return nil, errors.WithStack(err) }
+		// see if we have multipled days this week each of which need an event
+		if recur.byDayCnt > 1 {
+			// now loop through each day of the week that we want an event for on this count, this is usualy only 1 but could be more
+			// we're going day by day here
+			localStart = localStart.AddDate(0, 0, 1)
+			localEnd = localEnd.AddDate(0, 0, 1)
 
-		// add it to the start and end
-		localStart = localStart.AddDate(0, recur.months, recur.days)
-		localEnd = localEnd.AddDate(0, recur.months, recur.days)
+			if recur.dows[int(localStart.Weekday())] { // this day is enabled
+				nextEvent := Event{}
+				err = json.Unmarshal(jstr, &nextEvent) // create our new object based on the last event
+				if err != nil {	return nil, errors.WithStack(err) }
 
-		nextEvent.Schedule.Start = localStart.In(time.UTC) // these stay in utc
-		nextEvent.Schedule.End = localEnd.In(time.UTC)
+				nextEvent.Schedule.Start = localStart.In(time.UTC) // these stay in utc
+				nextEvent.Schedule.End = localEnd.In(time.UTC)
 
-		// check to see if we're done
-		if recur.count <= 0 && nextEvent.Schedule.Start.After(recur.until) { break } // we're done
+				// check to see if we're done
+				if recur.count <= 0 && nextEvent.Schedule.Start.After(recur.until) { return  } // we're done
 
-		events = append(events, nextEvent)
-		jstr, err = json.Marshal(nextEvent) // update this byte string for next time
-		if err != nil {	return nil, errors.WithStack(err) }
+				events = append(events, nextEvent)
+				jstr, err = json.Marshal(nextEvent) // update this byte string for next time
+				if err != nil {	return nil, errors.WithStack(err) }
+			}
+
+		} else {
+			// this can just be done in a "traditional" way
+		
+			nextEvent := Event{}
+			err = json.Unmarshal(jstr, &nextEvent) // create our new object based on the last event
+			if err != nil {	return nil, errors.WithStack(err) }
+
+			// add it to the start and end
+			localStart = localStart.AddDate(0, recur.months, recur.days)
+			localEnd = localEnd.AddDate(0, recur.months, recur.days)
+
+			nextEvent.Schedule.Start = localStart.In(time.UTC) // these stay in utc
+			nextEvent.Schedule.End = localEnd.In(time.UTC)
+
+			// check to see if we're done
+			if recur.count <= 0 && nextEvent.Schedule.Start.After(recur.until) { return  } // we're done
+
+			events = append(events, nextEvent)
+			jstr, err = json.Marshal(nextEvent) // update this byte string for next time
+			if err != nil {	return nil, errors.WithStack(err) }
+		}
 	}
 
 	return // we're done!!!

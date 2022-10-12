@@ -172,7 +172,7 @@ func TestFirstModelsEvent5 (t *testing.T) {
 	}
 	*/
 	
-	assert.Equal(t, 52, len(events))
+	assert.Equal(t, true, len(events) > 57) // this keeps getting bigger the more weeks into the future it becomes, because the start time is the same
 	assert.Equal (t, "2022-09-04 14", events[0].Schedule.Start.Format("2006-01-02 15"))
 	// start of end of daylight savings
 	assert.Equal (t, "2022-11-06 15", events[9].Schedule.Start.Format("2006-01-02 15"))
@@ -191,6 +191,27 @@ func TestFirstModelsEvent6 (t *testing.T) {
 
 	assert.Equal(t, 1, len(events))
 	assert.Equal (t, "2023-05-01 14", events[0].Schedule.Start.Format("2006-01-02 15"))
+}
+
+// multiple days a week 
+func TestFirstModelsEvent7 (t *testing.T) {
+	event := &Event{}
+	err := json.Unmarshal ([]byte(`{"id":"evt_03db7db767fb4981a1eabed19d0cdf7a","name":"Time Off","note":"","tags":[],"recurrence_rule":"FREQ=WEEKLY;WKST=SU;INTERVAL=1;UNTIL=20221201T013000Z;BYDAY=SU,MO,TU,WE,TH,FR","address":{"street":null,"street_line_2":null,"city":null,"state":null,"zip":null},"assigned_employees":[{"id":"pro_19eac700971d482080df939cd0d32519","first_name":"Cayson","last_name":"P","email":"caysonpearson12@gmail.com","mobile_number":"7207743840","color_hex":"e63936","avatar_url":"/assets/add_image_thumb.png","role":"field tech","tags":[],"permissions":{"can_add_and_edit_job":false,"can_be_booked_online":true,"can_call_and_text_with_customers":true,"can_chat_with_customers":true,"can_delete_and_cancel_job":false,"can_edit_message_on_invoice":true,"can_see_street_view_data":true,"can_share_job":false,"can_take_payment_see_prices":true,"can_see_customers":true,"can_see_full_schedule":true,"can_see_future_jobs":true,"can_see_marketing_campaigns":false,"can_see_reporting":false,"can_edit_settings":false,"is_point_of_contact":false,"is_admin":false},"company_name":"Sprinkler Pro's Co","company_id":"d2a8db0b-08bb-4b7f-ab0b-4a6a88ece2eb"}],"schedule":{"start_time":"2022-10-12T14:30:00Z","end_time":"2022-10-13T00:30:00Z","time_zone":""},"all_day":false,"company_name":"Sprinkler Pro's Co","company_id":"d2a8db0b-08bb-4b7f-ab0b-4a6a88ece2eb"}`), event)
+	if err != nil { t.Fatal (err) }
+
+	events, err := event.ExtractRecurrence()
+	if err != nil { t.Fatal(err) }
+
+	assert.Equal(t, 43, len(events))
+	assert.Equal (t, "2022-10-12 14", events[0].Schedule.Start.Format("2006-01-02 15"))
+	assert.Equal (t, "2022-10-13 14", events[1].Schedule.Start.Format("2006-01-02 15"))
+	assert.Equal (t, "2022-10-16 14", events[3].Schedule.Start.Format("2006-01-02 15"))
+
+	/*
+	for _, e := range events[:20] {
+		t.Logf("%s\n", e.Schedule.Start)
+	}
+	*/
 }
 
 
