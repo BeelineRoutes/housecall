@@ -89,7 +89,7 @@ type oauthRequest struct {
 	Redirect string `json:"redirect_uri"`
 }
 
-type oauthResponse struct {
+type OauthResponse struct {
 	AccessToken string `json:"access_token"`
 	TokenType string `json:"token_type"`
 	Expires int64 `json:"expires_in"`
@@ -99,7 +99,7 @@ type oauthResponse struct {
 }
 
 // returns a time object of when this oauth will expire
-func (this *oauthResponse) ExpiresAt () time.Time {
+func (this *OauthResponse) ExpiresAt () time.Time {
 	return time.Unix (this.Created + this.Expires, 0)
 }
 

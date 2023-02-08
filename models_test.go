@@ -28,7 +28,7 @@ func TestFirstModelsError (t *testing.T) {
 }
 
 func TestFirstModelsOAuthResponse (t *testing.T) {
-	resp := oauthResponse {
+	resp := OauthResponse {
 		Expires: 1000,
 		Created: 1619557886,
 	}
