@@ -65,14 +65,15 @@ type Error struct {
 
 func (this *Error) Err () error {
 	if this == nil { return nil } // no error
+	
+	if this.Error == "invalid_grant" { // this is for granting access based on the passed code
+		return errors.Wrap (ErrInvalidCode, this.Description)
+	}
+
 	switch this.StatusCode {
 	case http.StatusUnauthorized:
-		if this.Error == "invalid_grant" { // this is for granting access based on the passed code
-			return errors.Wrap (ErrInvalidCode, this.Description)
-		} else {
-			return errors.Wrap (ErrAuthExpired, this.Description) // invalid for another reason, most likely the oauth has been revoked
-		}
-
+		return errors.Wrap (ErrAuthExpired, this.Description) // invalid for another reason, most likely the oauth has been revoked
+	
 	}
 	// just a default
 	return errors.Errorf ("HouseCall Error : %d : %s : %s", this.StatusCode, this.Error, this.Description)
