@@ -458,6 +458,7 @@ type Estimate struct {
 		TotalAmount int64 `json:"total_amount"`
 		ApprovalStatus string `json:"approval_status"`
 		MessageFromPro string `json:"message_from_pro"`
+		Tags []string `json:"tags"`
 	}	
 }
 
