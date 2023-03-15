@@ -12,6 +12,7 @@
 package housecall 
 
 import (
+    "github.com/pkg/errors"
     
     //"fmt"
     "net/http"
@@ -31,6 +32,8 @@ import (
 // Takes the passed code we got from the params of the redirect url and converts it to long-live token and refresh token
 func (this *HouseCall) TokensFromCode (ctx context.Context, code string) (*OauthResponse, error) {
     req := this.seedOAuth()
+    if req == nil { return nil, errors.WithStack(ErrInvalidCode) }
+
     req.Code = code // copy this over
     req.GrantType = "authorization_code"
 
@@ -49,6 +52,7 @@ func (this *HouseCall) TokensFromCode (ctx context.Context, code string) (*Oauth
 // Gets new tokens using a previously retreived refresh token
 func (this *HouseCall) TokensFromRefresh (ctx context.Context, refresh string) (*OauthResponse, error) {
     req := this.seedOAuth()
+    if req == nil { return nil, errors.WithStack(ErrInvalidCode) }
     req.RefreshToken = refresh // copy this over
     req.GrantType = "refresh_token"
 

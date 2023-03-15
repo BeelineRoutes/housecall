@@ -702,6 +702,7 @@ type HouseCall struct {
 
 // populates our oauth request with the data we have from this object
 func (this *HouseCall) seedOAuth () *oauthRequest {
+	if this == nil { return nil } // double check
 	return &oauthRequest {
 		ClientId: this.clientId,
 		ClientSecret: this.clientSecret,
