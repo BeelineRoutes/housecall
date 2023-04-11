@@ -216,7 +216,11 @@ func (this *HouseCall) UpdateJobSchedule (ctx context.Context, token, jobId stri
     if startTime.IsZero() {
         errObj, err := this.send (ctx, http.MethodDelete, fmt.Sprintf("jobs/%s/schedule", jobId), header, nil, nil)
         if err != nil { return errors.WithStack(err) } // bail
-        if errObj != nil { return errObj.Err() } // something else bad
+        if errObj != nil { 
+            if errObj.StatusCode != http.StatusGone {
+                return errObj.Err() // something else bad
+            } // otherwise we're good with this error here
+        }
 
     } else { // updating
         schedule := &JobSchedule {
@@ -233,7 +237,11 @@ func (this *HouseCall) UpdateJobSchedule (ctx context.Context, token, jobId stri
 
         errObj, err := this.send (ctx, http.MethodPut, fmt.Sprintf("jobs/%s/schedule", jobId), header, schedule, nil)
         if err != nil { return errors.WithStack(err) } // bail
-        if errObj != nil { return errObj.Err() } // something else bad
+        if errObj != nil { 
+            if errObj.StatusCode != http.StatusGone {
+                return errObj.Err() // something else bad
+            } // otherwise we're good with this error here
+        }
     }
 
     // we're here, we're good
@@ -255,7 +263,11 @@ func (this *HouseCall) UpdateJobDispatch (ctx context.Context, token, jobId stri
 
     errObj, err := this.send (ctx, http.MethodPut, fmt.Sprintf("jobs/%s/dispatch", jobId), header, dispatch, nil)
     if err != nil { return errors.WithStack(err) } // bail
-    if errObj != nil { return errObj.Err() } // something else bad
+    if errObj != nil { 
+        if errObj.StatusCode != http.StatusGone {
+            return errObj.Err() // something else bad
+        } // otherwise we're good with this error here
+    }
     
     // we're here, we're good
     return nil

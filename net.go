@@ -31,7 +31,14 @@ func (this *HouseCall) finish (req *http.Request, out interface{}) (*Error, erro
 
 	body, _ := ioutil.ReadAll (resp.Body)
 
-    if resp.StatusCode > 399 { 
+	if resp.StatusCode == http.StatusGone {
+		// this means that the job/estimate was deleted 
+		errObj := &Error{
+			StatusCode: resp.StatusCode,
+		}
+		return errObj, nil
+
+	} else if resp.StatusCode > 399 { 
 		errObj := &Error{}
         err = errors.WithStack (json.Unmarshal (body, errObj)) // capture this error
 		if err != nil { err = errors.Wrap (err, string(body)) }
