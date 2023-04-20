@@ -16,7 +16,7 @@ type testConfig struct {
 	ClientId, ClientSecret, RedirectUrl, OAuthCode, Token string 
 }
 
-func TestFirstModelsError (t *testing.T) {
+func TestFirstModelsError1 (t *testing.T) {
 	var err *Error 
 
 	assert.Equal (t, nil, err.Err(), "nil for a nil object")
@@ -25,6 +25,23 @@ func TestFirstModelsError (t *testing.T) {
 	err = &Error{}
 	assert.NotEqual (t, nil, err.Err(), "Should return an error")
 	
+}
+
+func TestFirstModelsError2 (t *testing.T) {
+	errObj := &Error{}
+
+	err := json.Unmarshal ([]byte(`{"error":{"message":"Can't schedule an archived job"}}`), errObj)
+	if err != nil { t.Fatal(err) }
+
+	assert.Equal (t, 410, errObj.StatusCode)	
+	assert.Equal (t, "Can't schedule an archived job", errObj.ErrMsg)
+
+	err = json.Unmarshal ([]byte(`{"error":"invalid_grant","error_description":"The provided authorization grant is invalid, expired, revoked, does not match the redirection URI used in the authorization request, or was issued to another client."}`), errObj)
+	if err != nil { t.Fatal(err) }
+
+	assert.Equal (t, 0, errObj.StatusCode)	
+	assert.Equal (t, "invalid_grant", errObj.ErrMsg)
+
 }
 
 func TestFirstModelsOAuthResponse (t *testing.T) {

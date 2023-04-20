@@ -51,22 +51,58 @@ var (
 
 //----- ERRORS ---------------------------------------------------------------------------------------------------------//
 type Error struct {
-	// TODO need to handle the different error objects returned using an overridden unmarshal function
-	Error string `json:"error"`
-	Description string `json:"error_description"`
-	StatusCode int
-	
-	/*
-	Error struct {
-		Message string `json:"message"`
-	} `json:"error"`
-	*/
+	ErrMsg, Description string 
+	StatusCode int 
+}
+
+func (this *Error) UnmarshalJSON (b []byte) error {
+
+	// try this way
+	var one struct {
+		Error struct {
+			Message string 
+		}
+	}
+
+	err := json.Unmarshal(b, &one)
+	if err == nil && len(one.Error.Message) > 0 {
+		this.ErrMsg = one.Error.Message
+
+		if strings.Contains(this.ErrMsg, "archived job") {
+			this.StatusCode = http.StatusGone // it's gone 410
+		}
+
+	} else {
+		// that didn't work, try another format
+		var two struct {
+			Error string 
+			Description string `json:"error_description"`
+			StatusCode int
+		}
+
+		err = json.Unmarshal (b, &two)
+		if err == nil {
+			this.ErrMsg = two.Error 
+			this.Description = two.Description
+			this.StatusCode = two.StatusCode
+		} else {
+			this.ErrMsg = err.Error()
+			this.Description = string(b)
+		}
+	}
+
+	if len(this.ErrMsg) == 0 {
+		// this didn't work
+		this.ErrMsg = "Unkown struct type"
+		this.Description = string(b)
+	}
+	return nil 
 }
 
 func (this *Error) Err () error {
 	if this == nil { return nil } // no error
 	
-	if this.Error == "invalid_grant" { // this is for granting access based on the passed code
+	if this.ErrMsg == "invalid_grant" { // this is for granting access based on the passed code
 		return errors.Wrap (ErrInvalidCode, this.Description)
 	}
 
@@ -76,7 +112,7 @@ func (this *Error) Err () error {
 	
 	}
 	// just a default
-	return errors.Errorf ("HouseCall Error : %d : %s : %s", this.StatusCode, this.Error, this.Description)
+	return errors.Errorf ("HouseCall Error : %d : %s : %s", this.StatusCode, this.ErrMsg, this.Description)
 }
 
 //----- OAUTH ---------------------------------------------------------------------------------------------------------//
