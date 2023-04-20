@@ -40,11 +40,12 @@ func (this *HouseCall) finish (req *http.Request, out interface{}) (*Error, erro
 
 	} else if resp.StatusCode > 399 { 
 		errObj := &Error{}
-        err = errors.WithStack (json.Unmarshal (body, errObj)) // capture this error
-		if err != nil { err = errors.Wrap (err, string(body)) }
+        json.Unmarshal (body, errObj)
 
-        errObj.StatusCode = resp.StatusCode
-        return errObj, err
+		if errObj.StatusCode == 0 {
+        	errObj.StatusCode = resp.StatusCode // if it didn't get an error code, set it
+		}
+        return errObj, nil
     }
 	
 	if out != nil { err = errors.WithStack (json.Unmarshal (body, out)) }

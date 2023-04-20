@@ -119,6 +119,19 @@ func TestThirdJobLineItems (t *testing.T) {
 	
 }
 
+// job is deleted/archived so we should get a 410 back
+func TestThirdJobArchivedScheduleUpdate (t *testing.T) {
+	hc, cfg := newHouseCall (t)
+
+	ctx, cancel := context.WithTimeout (context.Background(), time.Minute) // this should take < 1 minute
+	defer cancel()
+
+	// now update the schedule to be something
+	targetDate := time.Now().AddDate (0, 0, 7) // 1 week in the future
+
+	err := hc.UpdateJobSchedule (ctx, cfg.Token, "job_a823caa00d064af0a0ef7c3f4f3fabc2", make([]string, 0), targetDate, time.Minute * 33, time.Minute * 30, false) // weird things so we know we updated
+	if err != nil { t.Fatal (err) }
+}
 
 /*
 func TestSimple (t *testing.T) {
