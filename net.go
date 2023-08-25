@@ -38,15 +38,23 @@ func (this *HouseCall) finish (req *http.Request, out interface{}) (*Error, erro
 		}
 		return errObj, nil
 
+	} else if resp.StatusCode > 499 { 
+		// 500 level errors seem to not share the same error object
+		errObj := &Error{}
+		errObj.ErrMsg = string(body) // dump the whole body in here
+        errObj.StatusCode = resp.StatusCode // if it didn't get an error code, set it
+		
+        return errObj, nil
+
 	} else if resp.StatusCode > 399 { 
 		errObj := &Error{}
-        json.Unmarshal (body, errObj)
+		json.Unmarshal (body, errObj)
 
 		if errObj.StatusCode == 0 {
-        	errObj.StatusCode = resp.StatusCode // if it didn't get an error code, set it
+			errObj.StatusCode = resp.StatusCode // if it didn't get an error code, set it
 		}
-        return errObj, nil
-    }
+		return errObj, nil
+	}
 	
 	if out != nil { err = errors.WithStack (json.Unmarshal (body, out)) }
 	
