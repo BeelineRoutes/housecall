@@ -394,6 +394,13 @@ type Job struct {
 		End time.Time `json:"scheduled_end"`
 		Window int `json:"arrival_window"`
 	}
+	Appointments []struct {
+		Id string `json:"id"`
+		Start time.Time `json:"start_time"`
+		End time.Time `json:"end_time"`
+		Window int `json:"arrival_window_in_minutes"`
+		AssignedEmployees []string `json:"dispatched_employees_ids"`
+	} `json:"appointments"`
 	WorkTimestamps struct {
 		OnMyWay time.Time `json:"on_my_way_at"`
 		Started time.Time `json:"started_at"`
@@ -436,7 +443,6 @@ type JobSchedule struct {
 type JobDispatch struct {
 	DispatchedEmployees []DispatchedEmployee `json:"dispatched_employees"`
 }
-
 
 type jobListResponse struct {
 	Jobs []Job `json:"jobs"`
@@ -487,20 +493,31 @@ type Estimate struct {
 		Window int `json:"arrival_window"`
 	}
 	AssignedEmployees [] Employee `json:"assigned_employees"`
-	Options []struct {
-		Id string `json:"id"`
-		Name string `json:"name"`
-		OptionNumber string `json:"option_number"`
-		TotalAmount int64 `json:"total_amount"`
-		ApprovalStatus string `json:"approval_status"`
-		MessageFromPro string `json:"message_from_pro"`
-		Tags []string `json:"tags"`
-	}	
+	Options []estimateOption
 }
 
 // returns that the job is in a state where the job is still expected to be completed in the future
 func (this *Estimate) IsPending () bool {
 	switch this.WorkStatus {
+	case WorkStatus_scheduled, WorkStatus_needsScheduling:
+		return true
+	}
+	return false // this is in a state where the job has been cancelled or already started
+}
+
+type estimateOption struct {
+	Id string `json:"id"`
+	Name string `json:"name"`
+	OptionNumber string `json:"option_number"`
+	TotalAmount int64 `json:"total_amount"`
+	ApprovalStatus string `json:"approval_status"`
+	Status WorkStatus `json:"status"`
+	MessageFromPro string `json:"message_from_pro"`
+	Tags []string `json:"tags"`
+}
+
+func (this *estimateOption) IsPending () bool {
+	switch this.Status {
 	case WorkStatus_scheduled, WorkStatus_needsScheduling:
 		return true
 	}

@@ -101,43 +101,34 @@ func (this *HouseCall) GetEstimate (ctx context.Context, token, estId string) (*
     return est, nil
 }
 
-// updates the target estimate time for a estimate
+// updates the target estimate time for an option in the estimate
 // at least 1 employee is required for this
-// if startTime is zero, then this will remove the scheduled time from the estimate
-/*
-func (this *HouseCall) UpdateEstimateSchedule (ctx context.Context, token, estId string, employeeIds []string, startTime time.Time, 
+func (this *HouseCall) UpdateEstimateSchedule (ctx context.Context, token, estId, optionId string, employeeIds []string, startTime time.Time, 
                                             duration, arrivalWindow time.Duration, notifyCustomer bool) error {
 
     header := make(map[string]string)
     header["Authorization"] = "Bearer " + token 
     
-    if startTime.IsZero() {
-        errObj, err := this.send (ctx, http.MethodDelete, fmt.Sprintf("estimates/%s/schedule", estId), header, nil, nil)
-        if err != nil { return errors.WithStack(err) } // bail
-        if errObj != nil { return errObj.Err() } // something else bad
-
-    } else { // updating
-        schedule := &JobSchedule {
-            Start: startTime,
-            End: startTime.Add (duration),
-            Window: int(arrivalWindow.Minutes()),
-            Notify: notifyCustomer,
-        }
-
-        // add in our assigned employee
-        for _, id := range employeeIds {
-            schedule.DispatchedEmployees = append (schedule.DispatchedEmployees, DispatchedEmployee{id}) 
-        }
-
-        errObj, err := this.send (ctx, http.MethodPut, fmt.Sprintf("estimates/%s/schedule", estId), header, schedule, nil)
-        if err != nil { return errors.WithStack(err) } // bail
-        if errObj != nil { return errObj.Err() } // something else bad
+    // updating
+    schedule := &JobSchedule {
+        Start: startTime,
+        End: startTime.Add (duration),
+        Window: int(arrivalWindow.Minutes()),
+        Notify: notifyCustomer,
     }
 
+    // add in our assigned employee
+    for _, id := range employeeIds {
+        schedule.DispatchedEmployees = append (schedule.DispatchedEmployees, DispatchedEmployee{id}) 
+    }
+
+    errObj, err := this.send (ctx, http.MethodPut, fmt.Sprintf("estimates/%s/options/%s/schedule", estId, optionId), header, schedule, nil)
+    if err != nil { return errors.WithStack(err) } // bail
+    if errObj != nil { return errObj.Err() } // something else bad
+    
     // we're here, we're good
     return nil
 }
-*/
 
 // creates a new estimate in the system
 func (this *HouseCall) CreateEstimate (ctx context.Context, token, customerId, addressId string, 

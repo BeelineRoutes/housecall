@@ -273,6 +273,34 @@ func (this *HouseCall) UpdateJobDispatch (ctx context.Context, token, jobId stri
     return nil
 }
 
+// jobs can have appointments now...
+func (this *HouseCall) UpdateJobAppointmentSchedule (ctx context.Context, token, jobId, optionId string, employeeIds []string, startTime time.Time, 
+                                                        duration, arrivalWindow time.Duration) error {
+
+    header := make(map[string]string)
+    header["Authorization"] = "Bearer " + token 
+
+    // updating
+    var req struct {
+        Start time.Time `json:"start_time"`
+        End time.Time `json:"end_time"`
+        Window int `json:"arrival_window_in_minutes"`
+        DispatchedEmployees []string `json:"dispatched_employees_ids"`
+    }
+
+    req.Start = startTime
+    req.End = startTime.Add (duration)
+    req.Window = int(arrivalWindow.Minutes())
+    req.DispatchedEmployees = employeeIds
+    
+    errObj, err := this.send (ctx, http.MethodPut, fmt.Sprintf("jobs/%s/appointments/%s", jobId, optionId), header, req, nil)
+    if err != nil { return errors.WithStack(err) } // bail
+    if errObj != nil { return errObj.Err() } // something else bad
+
+    // we're here, we're good
+    return nil
+}
+
 // creates a new job in the system
 func (this *HouseCall) CreateJob (ctx context.Context, token, customerId, addressId string, 
                                     startTime time.Time, duration, arrivalWindow time.Duration, 
