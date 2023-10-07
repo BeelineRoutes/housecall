@@ -304,7 +304,7 @@ func (this *HouseCall) UpdateJobAppointmentSchedule (ctx context.Context, token,
 // creates a new job in the system
 func (this *HouseCall) CreateJob (ctx context.Context, token, customerId, addressId string, 
                                     startTime time.Time, duration, arrivalWindow time.Duration, 
-                                    employeeIds, tags []string, lineItems []LineItem, leadSource string) error {
+                                    employeeIds, tags []string, lineItems []LineItem, leadSource string) (*Job, error) {
     header := make(map[string]string)
     header["Authorization"] = "Bearer " + token 
     header["Content-Type"] = "application/json; charset=utf-8"
@@ -325,13 +325,15 @@ func (this *HouseCall) CreateJob (ctx context.Context, token, customerId, addres
     job.Schedule.Start = startTime
     job.Schedule.End = startTime.Add (duration)
     job.Schedule.Window = fmt.Sprintf ("%d", int(arrivalWindow.Minutes()))
+
+    resp := &Job{}
     
-    errObj, err := this.send (ctx, http.MethodPost, "jobs", header, job, nil)
-    if err != nil { return errors.WithStack(err) } // bail
-    if errObj != nil { return errObj.Err() } // something else bad
+    errObj, err := this.send (ctx, http.MethodPost, "jobs", header, job, resp)
+    if err != nil { return nil, errors.WithStack(err) } // bail
+    if errObj != nil { return nil, errObj.Err() } // something else bad
     
     // we're here, we're good
-    return nil
+    return resp, nil
 }
 
 // returns the line items associated with the job
