@@ -47,7 +47,7 @@ func TestSecondHouseCall (t *testing.T) {
 
 	t.Logf ("Using Token: %s :: Refresh Token: %s", oauth.AccessToken, oauth.RefreshToken)
 
-	cfg.Token = oauth.AccessToken // copy this back out to our config file
+	cfg.AccessToken = oauth.AccessToken // copy this back out to our config file
 	out, _ := json.MarshalIndent (cfg, "", "    ")
 	err = ioutil.WriteFile ("test.cfg", out, 0666)
 	if err != nil { t.Fatal (err) }

@@ -13,7 +13,7 @@ import (
 
 // used for testing so I don't have my actual credentials in the repo
 type testConfig struct {
-	ClientId, ClientSecret, RedirectUrl, OAuthCode, Token string 
+	ClientId, ClientSecret, RedirectUrl, OAuthCode, AccessToken string 
 }
 
 func TestFirstModelsError1 (t *testing.T) {

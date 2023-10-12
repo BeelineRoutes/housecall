@@ -102,8 +102,8 @@ func (this *HouseCall) ListJobs (ctx context.Context, token string, start, finis
         // we're here, we're good
         for _, job := range resp.Jobs {
             jstr, _ := json.Marshal(job) // for error handling
+            err = this.fillJobAppointments (ctx, token, &job, start, finish)
 
-            err = this.fillJobAppointments (ctx, token, job, job.Schedule.Start, job.Schedule.End)
             if err == nil {
                 if len(job.AssignedEmployees) > 0 {
                     ret = append (ret, job)
@@ -143,7 +143,7 @@ func (this *HouseCall) ListMissedJobs (ctx context.Context, token string, start,
         for _, job := range resp.Jobs {
             jstr, _ := json.Marshal(job) // for error handling
 
-            err = this.fillJobAppointments (ctx, token, job, job.Schedule.Start, job.Schedule.End)
+            err = this.fillJobAppointments (ctx, token, &job, start, finish)
             if err == nil {
                 if len(job.AssignedEmployees) > 0 {
                     ret = append (ret, job)
@@ -183,7 +183,7 @@ func (this *HouseCall) ListJobsFromEmployee (ctx context.Context, token string, 
         for _, job := range resp.Jobs {
             jstr, _ := json.Marshal(job) // for error handling
 
-            err = this.fillJobAppointments (ctx, token, job, job.Schedule.Start, job.Schedule.End)
+            err = this.fillJobAppointments (ctx, token, &job, start, finish)
             if err == nil {
                 if len(job.AssignedEmployees) > 0 {
                     ret = append (ret, job)
@@ -220,7 +220,7 @@ func (this *HouseCall) ListJobsFromCustomer (ctx context.Context, token string, 
         for _, job := range resp.Jobs {
             jstr, _ := json.Marshal(job) // for error handling
 
-            err = this.fillJobAppointments (ctx, token, job, job.Schedule.Start, job.Schedule.End)
+            err = this.fillJobAppointments (ctx, token, &job, job.Schedule.Start, job.Schedule.End)
             if err == nil {
                 if len(job.AssignedEmployees) > 0 {
                     ret = append (ret, job)
@@ -343,7 +343,7 @@ func (this *HouseCall) GetJobAppointments (ctx context.Context, token, jobId str
 
 // for the most part we only want a specific appointment assigned to the job within the start/end times
 // this picks the first one
-func (this *HouseCall) fillJobAppointments (ctx context.Context, token string, job Job, start, finish time.Time) error {
+func (this *HouseCall) fillJobAppointments (ctx context.Context, token string, job *Job, start, finish time.Time) error {
     if job.Schedule.End.Sub(job.Schedule.Start) < time.Hour * 4 { return nil } // going to assume if the duration of the job is short, then there's no appointments
     // just trying to save time by not checking every job for appointments
 

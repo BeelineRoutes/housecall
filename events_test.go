@@ -22,7 +22,7 @@ func TestThirdEvents (t *testing.T) {
 	if err != nil { t.Fatal (err) }
 
 	// get our list of jobs, only unscheduled ones
-	events, err := hc.ListEvents (ctx, cfg.Token, start, end)
+	events, err := hc.ListEvents (ctx, cfg.AccessToken, start, end)
 	if err != nil { t.Fatal (err) }
 
 	assert.Equal (t, 1, len(events))

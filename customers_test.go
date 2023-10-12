@@ -16,7 +16,7 @@ func TestThirdCustomers (t *testing.T) {
 	defer cancel()
 
 	// get our list of customers
-	customers, err := hc.SearchCustomers (ctx, cfg.Token, "05445")
+	customers, err := hc.SearchCustomers (ctx, cfg.AccessToken, "05445")
 	if err != nil { t.Fatal (err) }
 
 	assert.Equal (t, true, len(customers) > 0, "expecting at least 1 customer")
@@ -24,7 +24,7 @@ func TestThirdCustomers (t *testing.T) {
 	assert.Equal (t, true, len(customers[0].Addresses) > 0)
 
 	// try a specific one
-	customers, err = hc.SearchCustomers (ctx, cfg.Token, "2 COMMON WAY")
+	customers, err = hc.SearchCustomers (ctx, cfg.AccessToken, "2 COMMON WAY")
 	if err != nil { t.Fatal (err) }
 
 	assert.Equal (t, 1, len(customers), "expecting 1 customer")
@@ -53,7 +53,7 @@ func TestThirdCustomerCreate (t *testing.T) {
 		Zip: "05401",
 	})
 
-	err := hc.CreateCustomer (ctx, cfg.Token, customer)
+	err := hc.CreateCustomer (ctx, cfg.AccessToken, customer)
 	if err != nil { t.Fatal (err) }
 
 	assert.Equal (t, true, len(customer.Id) > 0)

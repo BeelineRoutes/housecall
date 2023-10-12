@@ -16,7 +16,7 @@ func TestThirdCompany (t *testing.T) {
 	defer cancel()
 
 	// get our list of jobs, only unscheduled ones
-	company, err := hc.Company (ctx, cfg.Token)
+	company, err := hc.Company (ctx, cfg.AccessToken)
 	if err != nil { t.Fatal (err) }
 
 	// t.Logf("%+v\n", company)
@@ -35,7 +35,7 @@ func TestThirdSchedule (t *testing.T) {
 	defer cancel()
 
 	// get our list of jobs, only unscheduled ones
-	sch, err := hc.Schedule (ctx, cfg.Token)
+	sch, err := hc.Schedule (ctx, cfg.AccessToken)
 	if err != nil { t.Fatal (err) }
 
 	// t.Logf("%+v\n", sch)

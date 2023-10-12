@@ -16,7 +16,7 @@ func TestThirdJobs (t *testing.T) {
 	defer cancel()
 
 	// get our list of jobs, only unscheduled ones
-	jobs, err := hc.ListUnscheduledJobs (ctx, cfg.Token, 1)
+	jobs, err := hc.ListUnscheduledJobs (ctx, cfg.AccessToken, 1)
 	if err != nil { t.Fatal (err) }
 
 	assert.Equal (t, true, len(jobs) > 0, "expecting at least 1 job")
@@ -37,8 +37,8 @@ func TestThirdFutureJobs (t *testing.T) {
 	ctx, cancel := context.WithTimeout (context.Background(), time.Minute * 10)
 	defer cancel()
 
-	// get our list of jobs, only unscheduled ones
-	jobs, err := hc.ListJobs (ctx, cfg.Token, time.Now(), time.Now().AddDate (0, 2, 0))
+	// get our list of jobs
+	jobs, err := hc.ListJobs (ctx, cfg.AccessToken, time.Now().AddDate(0, 0, 1), time.Now().AddDate (0, 0, 2))
 	if err != nil { t.Fatal (err) }
 
 	t.Logf("got %d jobs\n", len(jobs))
@@ -63,7 +63,7 @@ func TestThirdJobScheduleUpdate (t *testing.T) {
 	defer cancel()
 
 	// get our list of jobs, we need one of these to update
-	jobs, err := hc.ListUnscheduledJobs (ctx, cfg.Token, 1)
+	jobs, err := hc.ListUnscheduledJobs (ctx, cfg.AccessToken, 1)
 	if err != nil { t.Fatal (err) }
 
 	if len(jobs) == 0 { t.Fatal ("need at least 1 job to do this test") }
@@ -74,14 +74,14 @@ func TestThirdJobScheduleUpdate (t *testing.T) {
 	targetDate := time.Now().AddDate (0, 0, 7) // 1 week in the future
 
 	// get our list of employees
-	employees, err := hc.ListEmployees (ctx, cfg.Token)
+	employees, err := hc.ListEmployees (ctx, cfg.AccessToken)
 	if err != nil { t.Fatal (err) }
 	if len(employees) == 0 { t.Fatal ("you need an employee to assign a scheduled job to") }
 
-	err = hc.UpdateJobSchedule (ctx, cfg.Token, jobs[0].Id, append(make([]string, 0), employees[0].Id), targetDate, time.Minute * 33, time.Minute * 34, false) // weird things so we know we updated
+	err = hc.UpdateJobSchedule (ctx, cfg.AccessToken, jobs[0].Id, append(make([]string, 0), employees[0].Id), targetDate, time.Minute * 33, time.Minute * 34, false) // weird things so we know we updated
 	if err != nil { t.Fatal (err) }
 
-	job, err := hc.GetJob (ctx, cfg.Token, jobs[0].Id) // get this job to verify we updated it
+	job, err := hc.GetJob (ctx, cfg.AccessToken, jobs[0].Id) // get this job to verify we updated it
 	if err != nil { t.Fatal (err) }
 
 	assert.Equal (t, targetDate.Format("2006-01-02 15:04:05"), job.Schedule.Start.Format("2006-01-02 15:04:05"), "start time")
@@ -90,10 +90,10 @@ func TestThirdJobScheduleUpdate (t *testing.T) {
 
 	// all good, now clear it
 
-	err = hc.UpdateJobSchedule (ctx, cfg.Token, jobs[0].Id, make([]string, 0), time.Time{}, 0, 0, false)
+	err = hc.UpdateJobSchedule (ctx, cfg.AccessToken, jobs[0].Id, make([]string, 0), time.Time{}, 0, 0, false)
 	if err != nil { t.Fatal (err) }
 
-	job, err = hc.GetJob (ctx, cfg.Token, jobs[0].Id) // get this job to verify we updated it
+	job, err = hc.GetJob (ctx, cfg.AccessToken, jobs[0].Id) // get this job to verify we updated it
 	if err != nil { t.Fatal (err) }
 
 	assert.Equal (t, true, job.Schedule.Start.IsZero(), "start is zero")
@@ -107,7 +107,7 @@ func TestThirdJobLineItems (t *testing.T) {
 	defer cancel()
 
 	// get our list of jobs, only unscheduled ones
-	lineItems, err := hc.GetLineItems (ctx, cfg.Token, "job_6d1066c319bf4617acfbb9cb038385fb")
+	lineItems, err := hc.GetLineItems (ctx, cfg.AccessToken, "job_6d1066c319bf4617acfbb9cb038385fb")
 	if err != nil { t.Fatal (err) }
 
 	assert.Equal (t, 2, len(lineItems))
@@ -129,7 +129,7 @@ func TestThirdJobArchivedScheduleUpdate (t *testing.T) {
 	// now update the schedule to be something
 	targetDate := time.Now().AddDate (0, 0, 7) // 1 week in the future
 
-	err := hc.UpdateJobSchedule (ctx, cfg.Token, "job_a823caa00d064af0a0ef7c3f4f3fabc2", make([]string, 0), targetDate, time.Minute * 33, time.Minute * 30, false) // weird things so we know we updated
+	err := hc.UpdateJobSchedule (ctx, cfg.AccessToken, "job_a823caa00d064af0a0ef7c3f4f3fabc2", make([]string, 0), targetDate, time.Minute * 33, time.Minute * 30, false) // weird things so we know we updated
 	if err != nil { t.Fatal (err) }
 }
 
@@ -142,7 +142,7 @@ func TestSimple (t *testing.T) {
 
 	targetDate := time.Now().AddDate (0, 0, 2) // 1 week in the future
 
-	err := hc.UpdateJobSchedule (ctx, cfg.Token, "job_bed0d8b73e164e0a8be68b71603a9a5c", "pro_2a51082b07424ba9976da29c7d4fcbac", targetDate, time.Minute * 30, time.Minute * 30, false) // weird things so we know we updated
+	err := hc.UpdateJobSchedule (ctx, cfg.AccessToken, "job_bed0d8b73e164e0a8be68b71603a9a5c", "pro_2a51082b07424ba9976da29c7d4fcbac", targetDate, time.Minute * 30, time.Minute * 30, false) // weird things so we know we updated
 	if err != nil { t.Fatal (err) }
 
 }

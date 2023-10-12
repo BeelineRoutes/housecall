@@ -16,7 +16,7 @@ func TestThirdEmployees (t *testing.T) {
 	defer cancel()
 
 	// get our list of employees
-	employees, err := hc.ListEmployees (ctx, cfg.Token)
+	employees, err := hc.ListEmployees (ctx, cfg.AccessToken)
 	if err != nil { t.Fatal (err) }
 
 	assert.Equal (t, true, len(employees) > 0, "expecting at least 1 employee")
