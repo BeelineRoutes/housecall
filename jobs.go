@@ -17,6 +17,8 @@ import (
     "net/url"
     "context"
     "time"
+    "encoding/json"
+    "log"
 )
 
   //-----------------------------------------------------------------------------------------------------------------------//
@@ -98,7 +100,18 @@ func (this *HouseCall) ListJobs (ctx context.Context, token string, start, finis
         if errObj != nil { return nil, errObj.Err() } // something else bad
 
         // we're here, we're good
-        ret = append (ret, resp.Jobs...)
+        for _, job := range resp.Jobs {
+            jstr, _ := json.Marshal(job) // for error handling
+
+            err = this.fillJobAppointments (ctx, token, job, job.Schedule.Start, job.Schedule.End)
+            if err == nil {
+                if len(job.AssignedEmployees) > 0 {
+                    ret = append (ret, job)
+                } // no error for no crew members, it's expected with appointments
+            } else {
+                log.Printf("%v :: %s\n", err, string(jstr))
+            }
+        }
         
         if i >= resp.TotalPages { return ret, nil } // we finished
     }
@@ -116,7 +129,7 @@ func (this *HouseCall) ListMissedJobs (ctx context.Context, token string, start,
     params.Set("sort_direction", "desc")
     params.Set("scheduled_start_min", start.Format(time.RFC3339))
     params.Set("scheduled_start_max", finish.Format(time.RFC3339))
-    params.Set("work_status[]", "scheduled")
+    // params.Set("work_status[]", "scheduled") // 2023-10-12 NT This is a big one, we can't use this status anymore because of appointments
     
     for i := 1; i <= 10; i++ { // stay in a loop as long as we're pulling jobs
         params.Set("page", fmt.Sprintf("%d", i)) // set our next page
@@ -127,7 +140,18 @@ func (this *HouseCall) ListMissedJobs (ctx context.Context, token string, start,
         if errObj != nil { return nil, errObj.Err() } // something else bad
 
         // we're here, we're good
-        ret = append (ret, resp.Jobs...)
+        for _, job := range resp.Jobs {
+            jstr, _ := json.Marshal(job) // for error handling
+
+            err = this.fillJobAppointments (ctx, token, job, job.Schedule.Start, job.Schedule.End)
+            if err == nil {
+                if len(job.AssignedEmployees) > 0 {
+                    ret = append (ret, job)
+                } // no error for no crew members, it's expected with appointments
+            } else {
+                log.Printf("%v :: %s\n", err, string(jstr))
+            }
+        }
         
         if i >= resp.TotalPages { return ret, nil } // we finished
     }
@@ -156,7 +180,18 @@ func (this *HouseCall) ListJobsFromEmployee (ctx context.Context, token string, 
         if errObj != nil { return nil, errObj.Err() } // something else bad
 
         // we're here, we're good
-        ret = append (ret, resp.Jobs...)
+        for _, job := range resp.Jobs {
+            jstr, _ := json.Marshal(job) // for error handling
+
+            err = this.fillJobAppointments (ctx, token, job, job.Schedule.Start, job.Schedule.End)
+            if err == nil {
+                if len(job.AssignedEmployees) > 0 {
+                    ret = append (ret, job)
+                } // no error for no crew members, it's expected with appointments
+            } else {
+                log.Printf("%v :: %s\n", err, string(jstr))
+            }
+        }
         
         if i >= resp.TotalPages { return ret, nil } // we finished
     }
@@ -182,7 +217,18 @@ func (this *HouseCall) ListJobsFromCustomer (ctx context.Context, token string, 
         if errObj != nil { return nil, errObj.Err() } // something else bad
 
         // we're here, we're good
-        ret = append (ret, resp.Jobs...)
+        for _, job := range resp.Jobs {
+            jstr, _ := json.Marshal(job) // for error handling
+
+            err = this.fillJobAppointments (ctx, token, job, job.Schedule.Start, job.Schedule.End)
+            if err == nil {
+                if len(job.AssignedEmployees) > 0 {
+                    ret = append (ret, job)
+                } // no error for no crew members, it's expected with appointments
+            } else {
+                log.Printf("%v :: %s\n", err, string(jstr))
+            }
+        }
         
         if i >= resp.TotalPages { return ret, nil } // we finished
     }
@@ -199,6 +245,9 @@ func (this *HouseCall) GetJob (ctx context.Context, token, jobId string) (*Job, 
     errObj, err := this.send (ctx, http.MethodGet, fmt.Sprintf("jobs/%s", jobId), header, nil, job)
     if err != nil { return nil, errors.WithStack(err) } // bail
     if errObj != nil { return nil, errObj.Err() } // something else bad
+
+    // see if there were appointments associated with this job
+    job.Appointments, err = this.GetJobAppointments (ctx, token, jobId)
 
     // we're here, we're good
     return job, nil
@@ -273,7 +322,75 @@ func (this *HouseCall) UpdateJobDispatch (ctx context.Context, token, jobId stri
     return nil
 }
 
+//----- APPOINTMENTS
 // jobs can have appointments now...
+func (this *HouseCall) GetJobAppointments (ctx context.Context, token, jobId string) ([]Appointment, error) {
+
+    header := make(map[string]string)
+    header["Authorization"] = "Bearer " + token 
+
+    var resp struct {
+        Appointments []Appointment
+    }
+
+    errObj, err := this.send (ctx, http.MethodGet, fmt.Sprintf("jobs/%s/appointments", jobId), header, nil, &resp)
+    if err != nil { return nil, errors.WithStack(err) } // bail
+    if errObj != nil { return nil, errObj.Err() } // something else bad
+
+    // we're here, we're good
+    return resp.Appointments, nil
+}
+
+// for the most part we only want a specific appointment assigned to the job within the start/end times
+// this picks the first one
+func (this *HouseCall) fillJobAppointments (ctx context.Context, token string, job Job, start, finish time.Time) error {
+    if job.Schedule.End.Sub(job.Schedule.Start) < time.Hour * 4 { return nil } // going to assume if the duration of the job is short, then there's no appointments
+    // just trying to save time by not checking every job for appointments
+
+    // get a list of appointments
+    apps, err := this.GetJobAppointments (ctx, token, job.Id)
+    if err != nil { return err }
+
+    if len(apps) < 2 { return nil } // just a long job i guess
+
+    // find the first appointment that starts before the finish time and ends after the start time
+    for _, app := range apps {
+        if app.Start.Before(finish) && app.End.After(start) {
+            // this is in our window
+            job.Appointments = make([]Appointment, 1) // reset this list
+            job.Appointments[0] = app // this one wins
+
+            // i'm manually updating the status of this job, as the job has a single status, with multiple appointments
+            // which makes no sense
+            if app.End.Before(time.Now()) && job.IsActive() {
+                job.WorkStatus = WorkStatus_scheduled // go back to a scheduled state
+            }
+            
+            // make sure the assigned crew members match this single appointment
+            finalCrew := make([]Employee, 0)
+            for _, emp := range job.AssignedEmployees {
+                // make sure they're in this app list
+                for _, id := range app.AssignedEmployees {
+                    if emp.Id == id {
+                        // this emp is still assigned
+                        finalCrew = append(finalCrew, emp)
+                        break // just for speed
+                    }
+                }
+            }
+
+            // copy over this final crew list for the job
+            // IMPORTANT, this might be empty now! calling function needs to skip jobs with no assigned crew members
+            job.AssignedEmployees = finalCrew
+            return nil // we're good
+        }
+    }
+
+    // this is actually bad, we couldn't find an appointment within this date range
+    // i don't think this should happen... 
+    return errors.WithStack (ErrAppNotFound)
+}
+
 func (this *HouseCall) UpdateJobAppointmentSchedule (ctx context.Context, token, jobId, optionId string, employeeIds []string, startTime time.Time, 
                                                         duration, arrivalWindow time.Duration) error {
 

@@ -43,6 +43,7 @@ var (
 	ErrInvalidCode 		= errors.New("OAuth code not valid")
 	ErrAuthExpired		= errors.New("OAuth expired")
 	ErrTooManyRecords	= errors.New("Too many records returned")
+	ErrAppNotFound		= errors.New("Appointment not found")
 )
 
   //-----------------------------------------------------------------------------------------------------------------------//
@@ -376,6 +377,14 @@ type customerListResponse struct {
 
 //----- JOBS ---------------------------------------------------------------------------------------------------------//
 
+type Appointment struct {
+	Id string `json:"id"`
+	Start time.Time `json:"start_time"`
+	End time.Time `json:"end_time"`
+	Window int `json:"arrival_window_in_minutes"`
+	AssignedEmployees []string `json:"dispatched_employees_ids"`
+}
+
 type Job struct {
 	Id string `json:"id"`
 	CustomerId string `json:"customer_id"`
@@ -388,19 +397,13 @@ type Job struct {
 	Total int64 `json:"total_amount"`
 	Tags []string `json:"tags"`
 	Description string `json:"description"`
-	AssignedEmployees [] Employee `json:"assigned_employees"`
+	AssignedEmployees []Employee `json:"assigned_employees"`
 	Schedule struct {
 		Start time.Time `json:"scheduled_start"`
 		End time.Time `json:"scheduled_end"`
 		Window int `json:"arrival_window"`
 	}
-	Appointments []struct {
-		Id string `json:"id"`
-		Start time.Time `json:"start_time"`
-		End time.Time `json:"end_time"`
-		Window int `json:"arrival_window_in_minutes"`
-		AssignedEmployees []string `json:"dispatched_employees_ids"`
-	} `json:"appointments"`
+	Appointments []Appointment `json:"appointments"`
 	WorkTimestamps struct {
 		OnMyWay time.Time `json:"on_my_way_at"`
 		Started time.Time `json:"started_at"`
