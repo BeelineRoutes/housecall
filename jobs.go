@@ -368,6 +368,9 @@ func (this *HouseCall) fillJobAppointments (ctx context.Context, token string, j
 
             // the arrival window for this appointment also updates the jobs one
             job.Schedule.Window = app.Window
+            // as do the start and end times
+            job.Schedule.Start = app.Start 
+            job.Schedule.End = app.End 
             
             // make sure the assigned crew members match this single appointment
             finalCrew := make([]Employee, 0)
