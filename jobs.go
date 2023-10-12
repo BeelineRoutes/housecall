@@ -365,6 +365,9 @@ func (this *HouseCall) fillJobAppointments (ctx context.Context, token string, j
             if app.End.Before(time.Now()) && job.IsActive() {
                 job.WorkStatus = WorkStatus_scheduled // go back to a scheduled state
             }
+
+            // the arrival window for this appointment also updates the jobs one
+            job.Schedule.Window = app.Window
             
             // make sure the assigned crew members match this single appointment
             finalCrew := make([]Employee, 0)
