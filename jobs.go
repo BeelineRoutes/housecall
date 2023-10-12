@@ -407,7 +407,7 @@ func (this *HouseCall) UpdateJobAppointmentSchedule (ctx context.Context, token,
     var req struct {
         Start time.Time `json:"start_time"`
         End time.Time `json:"end_time"`
-        Window int `json:"arrival_window_in_minutes"`
+        Window int `json:"arrival_window_minutes"`
         DispatchedEmployees []string `json:"dispatched_employees_ids"`
     }
 
