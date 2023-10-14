@@ -344,14 +344,16 @@ func (this *HouseCall) GetJobAppointments (ctx context.Context, token, jobId str
 // for the most part we only want a specific appointment assigned to the job within the start/end times
 // this picks the first one
 func (this *HouseCall) fillJobAppointments (ctx context.Context, token string, job *Job, start, finish time.Time) error {
-    if job.Schedule.End.Sub(job.Schedule.Start) < time.Hour * 4 { return nil } // going to assume if the duration of the job is short, then there's no appointments
+    // 2023-10-14 i think we always want to use appointments, so get them each time even if there's only one
+    // if job.Schedule.End.Sub(job.Schedule.Start) < time.Hour * 4 { return nil } // going to assume if the duration of the job is short, then there's no appointments
     // just trying to save time by not checking every job for appointments
 
     // get a list of appointments
     apps, err := this.GetJobAppointments (ctx, token, job.Id)
     if err != nil { return err }
 
-    if len(apps) < 2 { return nil } // just a long job i guess
+
+    // if len(apps) < 2 { return nil } // just a long job i guess
 
     // find the first appointment that starts before the finish time and ends after the start time
     for _, app := range apps {
