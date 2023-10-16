@@ -348,6 +348,9 @@ func (this *HouseCall) fillJobAppointments (ctx context.Context, token string, j
     // if job.Schedule.End.Sub(job.Schedule.Start) < time.Hour * 4 { return nil } // going to assume if the duration of the job is short, then there's no appointments
     // just trying to save time by not checking every job for appointments
 
+    //2023-10-16 don't get the appointments if they job isn't active.
+    if job.IsActive() == false && job.IsPending() == false { return nil } // we're done
+
     // get a list of appointments
     apps, err := this.GetJobAppointments (ctx, token, job.Id)
     if err != nil { return err }
