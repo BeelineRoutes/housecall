@@ -403,7 +403,7 @@ func (this *HouseCall) fillJobAppointments (ctx context.Context, token string, j
 }
 
 func (this *HouseCall) UpdateJobAppointmentSchedule (ctx context.Context, token, jobId, optionId string, employeeIds []string, startTime time.Time, 
-                                                        duration, arrivalWindow time.Duration) error {
+                                                        duration, arrivalWindow time.Duration, notifyCustomer bool) error {
 
     header := make(map[string]string)
     header["Authorization"] = "Bearer " + token 
@@ -412,6 +412,7 @@ func (this *HouseCall) UpdateJobAppointmentSchedule (ctx context.Context, token,
     var req struct {
         Start time.Time `json:"start_time"`
         End time.Time `json:"end_time"`
+        Notify bool `json:"notify"`
         Window int `json:"arrival_window_minutes"`
         DispatchedEmployees []string `json:"dispatched_employees_ids"`
     }
@@ -420,6 +421,7 @@ func (this *HouseCall) UpdateJobAppointmentSchedule (ctx context.Context, token,
     req.End = startTime.Add (duration)
     req.Window = int(arrivalWindow.Minutes())
     req.DispatchedEmployees = employeeIds
+    req.Notify = notifyCustomer
     
     errObj, err := this.send (ctx, http.MethodPut, fmt.Sprintf("jobs/%s/appointments/%s", jobId, optionId), header, req, nil)
     if err != nil { return errors.WithStack(err) } // bail
