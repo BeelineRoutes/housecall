@@ -110,7 +110,7 @@ func (this *HouseCall) ListJobs (ctx context.Context, token string, start, finis
                     ret = append (ret, job)
                 } // no error for no crew members, it's expected with appointments
             } else {
-                log.Printf("%v :: %s\n", err, string(jstr))
+                log.Printf("%v : ListJobs : %s : %s : %s :: %s\n", err, job.Id, start, finish, string(jstr))
             }
         }
         
@@ -150,7 +150,7 @@ func (this *HouseCall) ListMissedJobs (ctx context.Context, token string, start,
                     ret = append (ret, job)
                 } // no error for no crew members, it's expected with appointments
             } else {
-                log.Printf("%v :: %s\n", err, string(jstr))
+                log.Printf("%v : ListMissedJobs : %s : %s : %s :: %s\n", err, job.Id, start, finish, string(jstr))
             }
         }
         
@@ -190,7 +190,7 @@ func (this *HouseCall) ListJobsFromEmployee (ctx context.Context, token string, 
                     ret = append (ret, job)
                 } // no error for no crew members, it's expected with appointments
             } else {
-                log.Printf("%v :: %s\n", err, string(jstr))
+                log.Printf("%v : ListJobsFromEmployee : %s : %s : %s : %s :: %s\n", err, job.Id, employeeId, start, finish, string(jstr))
             }
         }
         
@@ -227,7 +227,7 @@ func (this *HouseCall) ListJobsFromCustomer (ctx context.Context, token string, 
                     ret = append (ret, job)
                 } // no error for no crew members, it's expected with appointments
             } else {
-                log.Printf("%v :: %s\n", err, string(jstr))
+                log.Printf("%v : ListJobsFromCustomer : %s : %s :: %s\n", err, job.Id, customerId, string(jstr))
             }
         }
         
