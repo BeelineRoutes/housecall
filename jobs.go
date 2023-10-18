@@ -19,6 +19,7 @@ import (
     "time"
     "encoding/json"
     "log"
+    "strings"
 )
 
   //-----------------------------------------------------------------------------------------------------------------------//
@@ -344,19 +345,12 @@ func (this *HouseCall) GetJobAppointments (ctx context.Context, token, jobId str
 // for the most part we only want a specific appointment assigned to the job within the start/end times
 // this picks the first one
 func (this *HouseCall) fillJobAppointments (ctx context.Context, token string, job *Job, start, finish time.Time) error {
-    // 2023-10-14 i think we always want to use appointments, so get them each time even if there's only one
-    // if job.Schedule.End.Sub(job.Schedule.Start) < time.Hour * 4 { return nil } // going to assume if the duration of the job is short, then there's no appointments
-    // just trying to save time by not checking every job for appointments
-
-    //2023-10-16 don't get the appointments if they job isn't active.
+    // 2023-10-16 don't get the appointments if they job isn't active.
     if job.IsActive() == false && job.IsPending() == false { return nil } // we're done
 
     // get a list of appointments
     apps, err := this.GetJobAppointments (ctx, token, job.Id)
     if err != nil { return err }
-
-
-    // if len(apps) < 2 { return nil } // just a long job i guess
 
     // find the first appointment that starts before the finish time and ends after the start time
     for _, app := range apps {
@@ -402,7 +396,9 @@ func (this *HouseCall) fillJobAppointments (ctx context.Context, token string, j
     return errors.WithStack (ErrAppNotFound)
 }
 
-func (this *HouseCall) UpdateJobAppointmentSchedule (ctx context.Context, token, jobId, optionId string, employeeIds []string, startTime time.Time, 
+// this is how we update the "new" setup for jobs where we have an appointment now
+// 2023-10-18 notifications don't work with this endpoint, HCP says they're working on that 
+func (this *HouseCall) UpdateJobAppointmentSchedule (ctx context.Context, token, jobId, apptId string, employeeIds []string, startTime time.Time, 
                                                         duration, arrivalWindow time.Duration, notifyCustomer bool) error {
 
     header := make(map[string]string)
@@ -423,7 +419,24 @@ func (this *HouseCall) UpdateJobAppointmentSchedule (ctx context.Context, token,
     req.DispatchedEmployees = employeeIds
     req.Notify = notifyCustomer
     
-    errObj, err := this.send (ctx, http.MethodPut, fmt.Sprintf("jobs/%s/appointments/%s", jobId, optionId), header, req, nil)
+    errObj, err := this.send (ctx, http.MethodPut, fmt.Sprintf("jobs/%s/appointments/%s", jobId, apptId), header, req, nil)
+    if err != nil { return errors.WithStack(err) } // bail
+    if errObj != nil { 
+        if errObj.StatusCode == http.StatusGone || errObj.StatusCode == http.StatusNotFound {
+            return nil // no big deal
+        }
+
+        // i'm also getting HouseCall Error : 400 : Archived job :
+        // which happens when someone deletes the job and not just the appointment for the job
+        // just going to hard code that string
+        if errObj.StatusCode == http.StatusBadRequest && strings.Contains (errObj.Err().Error(), "Archived job") {
+            return nil // also ignore these errors
+        }
+        
+        // otherwise we're good with this error here
+        return errObj.Err() // something else bad
+    }
+
     if err != nil { return errors.WithStack(err) } // bail
     if errObj != nil { return errObj.Err() } // something else bad
 
