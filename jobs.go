@@ -391,9 +391,8 @@ func (this *HouseCall) fillJobAppointments (ctx context.Context, token string, j
         }
     }
 
-    // this is actually bad, we couldn't find an appointment within this date range
-    // i don't think this should happen... 
-    return errors.WithStack (ErrAppNotFound)
+    // turns out this happens, and when it does we just use the existing job schedule and stuff
+    return nil 
 }
 
 // this is how we update the "new" setup for jobs where we have an appointment now
