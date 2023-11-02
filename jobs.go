@@ -361,7 +361,7 @@ func (this *HouseCall) fillJobAppointments (ctx context.Context, token string, j
 
             // i'm manually updating the status of this job, as the job has a single status, with multiple appointments
             // which makes no sense
-            if app.End.Before(time.Now()) && job.IsActive() {
+            if len(apps) > 1 && app.End.After(time.Now()) && job.IsActive() {
                 job.WorkStatus = WorkStatus_scheduled // go back to a scheduled state
             }
 
