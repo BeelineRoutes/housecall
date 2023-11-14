@@ -380,7 +380,7 @@ type Appointment struct {
 	Id string `json:"id"`
 	Start time.Time `json:"start_time"`
 	End time.Time `json:"end_time"`
-	Window int `json:"arrival_window_in_minutes"`
+	Window int `json:"arrival_window_minutes"`
 	AssignedEmployees []string `json:"dispatched_employees_ids"`
 }
 

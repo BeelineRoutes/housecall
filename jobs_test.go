@@ -38,7 +38,7 @@ func TestThirdFutureJobs (t *testing.T) {
 	defer cancel()
 
 	// get our list of jobs
-	jobs, err := hc.ListJobs (ctx, cfg.AccessToken, time.Now().AddDate(0, 0, 1), time.Now().AddDate (0, 0, 2))
+	jobs, err := hc.ListJobs (ctx, cfg.AccessToken, time.Now().AddDate(0, 0, 0), time.Now().AddDate (0, 0, 1))
 	if err != nil { t.Fatal (err) }
 
 	t.Logf("got %d jobs\n", len(jobs))
@@ -48,11 +48,31 @@ func TestThirdFutureJobs (t *testing.T) {
 	assert.NotEqual (t, "", jobs[0].Customer.Id, "not filled in")
 	assert.NotEqual (t, "", jobs[0].Address.Id, "not filled in")
 	
-	/*
+	
 	for _, j := range jobs {
 		t.Logf ("%+v\n", j)
 	}
-	*/
+	
+}
+
+func TestThirdJobAppointments (t *testing.T) {
+	hc, cfg := newHouseCall (t)
+
+	ctx, cancel := context.WithTimeout (context.Background(), time.Minute * 10)
+	defer cancel()
+
+	// get our list of apps
+	apps, err := hc.GetJobAppointments (ctx, cfg.AccessToken, "job_fa1846167bf54c8aa3615cb709c72129")
+	if err != nil { t.Fatal (err) }
+
+	t.Logf("got %d apps\n", len(apps))
+
+	assert.Equal (t, true, len(apps) > 0, "expecting at least 1 app")
+		
+	for _, j := range apps {
+		t.Logf ("%+v\n", j)
+	}
+	
 }
 
 
