@@ -366,6 +366,7 @@ type Customer struct {
 	Tags []string `json:"tags"`
 	Addresses []Address `json:"addresses"`
 	LeadSource string `json:"lead_source,omitempty"`
+	Notes string `json:"notes,omitempty"`
 }
 
 type customerListResponse struct {
