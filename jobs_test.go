@@ -76,7 +76,7 @@ func TestThirdJobAppointments (t *testing.T) {
 }
 
 
-func TestThirdJobScheduleUpdate (t *testing.T) {
+func TestThirdJobScheduleUpdate1 (t *testing.T) {
 	hc, cfg := newHouseCall (t)
 
 	ctx, cancel := context.WithTimeout (context.Background(), time.Minute) // this should take < 1 minute
@@ -170,3 +170,15 @@ func TestSimple (t *testing.T) {
 
 */
 
+// really just testing the notifications
+func TestThirdJobScheduleUpdate2 (t *testing.T) {
+	hc, cfg := newHouseCall (t)
+
+	ctx, cancel := context.WithTimeout (context.Background(), time.Minute) // this should take < 1 minute
+	defer cancel()
+
+	
+	err := hc.UpdateJobSchedule (ctx, cfg.AccessToken, "job_9436795e1e2645fa988feab850f95b34", append(make([]string, 0), "pro_2a51082b07424ba9976da29c7d4fcbac"), time.Now(), time.Minute * 30, time.Minute * 60, false) // weird things so we know we updated
+	if err != nil { t.Fatal (err) }
+
+}
