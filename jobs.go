@@ -42,7 +42,6 @@ func (this *HouseCall) ListUnscheduledJobs (ctx context.Context, token string, p
     params.Set("sort_direction", "desc")
 
     if pageLimit == 0 { pageLimit = 1 } // just to make it work
-    if pageLimit > 200 { pageLimit = 200 } // let's not go crazy here
     
     for i := 1; i <= pageLimit; i++ { // stay in a loop as long as we're pulling jobs
         params.Set("page", fmt.Sprintf("%d", i)) // set our next page
@@ -52,32 +51,16 @@ func (this *HouseCall) ListUnscheduledJobs (ctx context.Context, token string, p
         if err != nil { return nil, errors.WithStack(err) } // bail
         if errObj != nil { return nil, errObj.Err() } // something else bad
 
+        if resp.TotalPages > pageLimit {
+            return nil, nil // we have too many pages and it would take too long to return them all, ~3 seconds per page request
+        }
+
         // we're here, we're good
         ret = append (ret, resp.Jobs...)
 
         if i >= resp.TotalPages { return ret, nil } // we finished
     }
     return ret, nil // we're done
-}
-
-// gets a specific page of unscheduled jobs, ordered by most recently added
-func (this *HouseCall) PageUnscheduledJobs (ctx context.Context, token string, page int) ([]Job, error) {
-    header := make(map[string]string)
-    header["Authorization"] = "Bearer " + token 
-
-    params := url.Values{}
-    params.Set("page_size", "200")
-    params.Set("work_status[]", "unscheduled")
-    params.Set("sort_direction", "desc")
-    params.Set("page", fmt.Sprintf("%d", page)) // set our next page
-
-    resp := jobListResponse{}
-
-    errObj, err := this.send (ctx, http.MethodGet, fmt.Sprintf("jobs?%s", params.Encode()), header, nil, &resp)
-    if err != nil { return nil, errors.WithStack(err) } // bail
-    if errObj != nil { return nil, errObj.Err() } // something else bad
-
-    return resp.Jobs, nil // we're good
 }
 
 // returns all jobs that are within our start and finish ranges

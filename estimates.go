@@ -37,7 +37,6 @@ func (this *HouseCall) ListUnscheduledEstimates (ctx context.Context, token stri
     params.Set("work_status[]", "unscheduled")
 
     if pageLimit == 0 { pageLimit = 1 } // just to make it work
-    if pageLimit > 200 { pageLimit = 200 } // let's not go crazy here
     
     for i := 1; i <= pageLimit; i++ { // stay in a loop as long as we're pulling estimates
         params.Set("page", fmt.Sprintf("%d", i)) // set our next page
@@ -46,6 +45,11 @@ func (this *HouseCall) ListUnscheduledEstimates (ctx context.Context, token stri
         errObj, err := this.send (ctx, http.MethodGet, fmt.Sprintf("estimates?%s", params.Encode()), header, nil, &resp)
         if err != nil { return nil, errors.WithStack(err) } // bail
         if errObj != nil { return nil, errObj.Err() } // something else bad
+
+        // see if we have too many
+        if resp.TotalPages > pageLimit {
+            return nil, nil // we have too many pages and it would take too long to return them all, ~3 seconds per page request
+        }
 
         // we're here, we're good
         ret = append (ret, resp.Estimates...)
