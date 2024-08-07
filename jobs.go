@@ -429,7 +429,7 @@ func (this *HouseCall) UpdateJobAppointmentSchedule (ctx context.Context, token,
 // creates a new job in the system
 func (this *HouseCall) CreateJob (ctx context.Context, token, customerId, addressId string, 
                                     startTime time.Time, duration, arrivalWindow time.Duration, 
-                                    employeeIds, tags []string, lineItems []LineItem, leadSource string) (*Job, error) {
+                                    employeeIds, tags []string, lineItems []LineItem, leadSource, notes string) (*Job, error) {
     header := make(map[string]string)
     header["Authorization"] = "Bearer " + token 
     header["Content-Type"] = "application/json; charset=utf-8"
@@ -440,6 +440,7 @@ func (this *HouseCall) CreateJob (ctx context.Context, token, customerId, addres
         LineItems: lineItems,
         Tags: tags,
         LeadSource: leadSource,
+        Notes: notes,
     }
 
     // add in our employee
