@@ -4,7 +4,6 @@
     There's a couple of filters used for requesting jobs, these have been broken out into their own functions.
 
     Updating jobs allows for setting a target time as well as an employee.
-    Multiple employees may be assigned as well using UpdateJobDispatch
 ** ****************************************************************************************************************** **/
 
 package housecall 
@@ -17,8 +16,6 @@ import (
     "net/url"
     "context"
     "time"
-    "encoding/json"
-    "log"
     "strings"
 )
 
@@ -74,46 +71,9 @@ func (this *HouseCall) ListJobs (ctx context.Context, token string, start, finis
     params.Set("sort_direction", "desc")
     params.Set("scheduled_start_min", start.Format(time.RFC3339))
     params.Set("scheduled_start_max", finish.Format(time.RFC3339))
-    
-    for i := 1; i <= 100; i++ { // stay in a loop as long as we're pulling jobs
-        params.Set("page", fmt.Sprintf("%d", i)) // set our next page
-        resp := jobListResponse{}
-        
-        errObj, err := this.send (ctx, http.MethodGet, fmt.Sprintf("jobs?%s", params.Encode()), header, nil, &resp)
-        if err != nil { return nil, errors.WithStack(err) } // bail
-        if errObj != nil { return nil, errObj.Err() } // something else bad
+    params.Set("expand[]", "appointments")
 
-        // we're here, we're good
-        for _, job := range resp.Jobs {
-            jstr, _ := json.Marshal(job) // for error handling
-            err = this.fillJobAppointments (ctx, token, &job, start, finish)
-
-            if err == nil {
-                if len(job.AssignedEmployees) > 0 {
-                    ret = append (ret, job)
-                } // no error for no crew members, it's expected with appointments
-            } else {
-                log.Printf("%v : ListJobs : %s : %s : %s :: %s\n", err, job.Id, start, finish, string(jstr))
-            }
-        }
-        
-        if i >= resp.TotalPages { return ret, nil } // we finished
-    }
-    return ret, errors.Wrapf (ErrTooManyRecords, "received over %d jobs in your history", len(ret))
-}
-
-// returns all jobs that are within our start and finish ranges
-func (this *HouseCall) ListMissedJobs (ctx context.Context, token string, start, finish time.Time) ([]Job, error) {
-    ret := make([]Job, 0) // main list to return
-    header := make(map[string]string)
-    header["Authorization"] = "Bearer " + token 
-
-    params := url.Values{}
-    params.Set("page_size", "200")
-    params.Set("sort_direction", "desc")
-    params.Set("scheduled_start_min", start.Format(time.RFC3339))
-    params.Set("scheduled_start_max", finish.Format(time.RFC3339))
-    // params.Set("work_status[]", "scheduled") // 2023-10-12 NT This is a big one, we can't use this status anymore because of appointments
+    existingJobs := make(map[string]struct{})
     
     for i := 1; i <= 10; i++ { // stay in a loop as long as we're pulling jobs
         params.Set("page", fmt.Sprintf("%d", i)) // set our next page
@@ -125,37 +85,24 @@ func (this *HouseCall) ListMissedJobs (ctx context.Context, token string, start,
 
         // we're here, we're good
         for _, job := range resp.Jobs {
-            jstr, _ := json.Marshal(job) // for error handling
-
-            err = this.fillJobAppointments (ctx, token, &job, start, finish)
-            if err == nil {
-                if len(job.AssignedEmployees) > 0 {
-                    ret = append (ret, job)
-                } // no error for no crew members, it's expected with appointments
-            } else {
-                log.Printf("%v : ListMissedJobs : %s : %s : %s :: %s\n", err, job.Id, start, finish, string(jstr))
+            if job.include (start, finish) {
+                ret = append (ret, job)
+                existingJobs[job.Id] = struct{}{}
             }
         }
         
-        if i >= resp.TotalPages { return ret, nil } // we finished
+        if i >= resp.TotalPages { break } // we finished
     }
-    return ret, nil // don't error about this
-}
 
-// returns a list of jobs for a specific employee over the target date range
-func (this *HouseCall) ListJobsFromEmployee (ctx context.Context, token string, employeeId string, start, finish time.Time) ([]Job, error) {
-    ret := make([]Job, 0) // main list to return
-    header := make(map[string]string)
-    header["Authorization"] = "Bearer " + token 
+    // 2025-04-27 NT started doing this as a way to get the second appointment for a job. Still doesn't find middle appointments
+    // now find the jobs that end on this date
+    params.Del("scheduled_start_min")
+    params.Del("scheduled_start_max")
 
-    params := url.Values{}
-    params.Set("page_size", "200")
-    params.Set("sort_direction", "desc")
-    params.Set("scheduled_start_min", start.Format(time.RFC3339))
-    params.Set("scheduled_start_max", finish.Format(time.RFC3339))
-    params.Set("employee_ids[]", employeeId)
-    
-    for i := 1; i <= 100; i++ { // stay in a loop as long as we're pulling jobs
+    params.Set("scheduled_end_min", start.Format(time.RFC3339))
+    params.Set("scheduled_end_max", finish.Format(time.RFC3339))
+
+    for i := 1; i <= 10; i++ { // stay in a loop as long as we're pulling jobs
         params.Set("page", fmt.Sprintf("%d", i)) // set our next page
         resp := jobListResponse{}
         
@@ -165,76 +112,19 @@ func (this *HouseCall) ListJobsFromEmployee (ctx context.Context, token string, 
 
         // we're here, we're good
         for _, job := range resp.Jobs {
-            jstr, _ := json.Marshal(job) // for error handling
+            
+            // make sure this job doesn't already exist because we pulled it in above
+            if _, exists := existingJobs[job.Id]; exists { continue }
 
-            err = this.fillJobAppointments (ctx, token, &job, start, finish)
-            if err == nil {
-                if len(job.AssignedEmployees) > 0 {
-                    ret = append (ret, job)
-                } // no error for no crew members, it's expected with appointments
-            } else {
-                log.Printf("%v : ListJobsFromEmployee : %s : %s : %s : %s :: %s\n", err, job.Id, employeeId, start, finish, string(jstr))
+            if job.include (start, finish) {
+                ret = append (ret, job)
             }
         }
         
-        if i >= resp.TotalPages { return ret, nil } // we finished
+        if i >= resp.TotalPages { break } // we finished
     }
-    return ret, errors.Wrapf (ErrTooManyRecords, "received over %d jobs in your history", len(ret))
-}
-
-// returns a list of jobs that are associated with the customer
-func (this *HouseCall) ListJobsFromCustomer (ctx context.Context, token string, customerId string) ([]Job, error) {
-    ret := make([]Job, 0) // main list to return
-    header := make(map[string]string)
-    header["Authorization"] = "Bearer " + token 
-
-    params := url.Values{}
-    params.Set("page_size", "200")
-    params.Set("customer_id", customerId)
     
-    for i := 1; i <= 100; i++ { // stay in a loop as long as we're pulling jobs
-        params.Set("page", fmt.Sprintf("%d", i)) // set our next page
-        resp := jobListResponse{}
-        
-        errObj, err := this.send (ctx, http.MethodGet, fmt.Sprintf("jobs?%s", params.Encode()), header, nil, &resp)
-        if err != nil { return nil, errors.WithStack(err) } // bail
-        if errObj != nil { return nil, errObj.Err() } // something else bad
-
-        // we're here, we're good
-        for _, job := range resp.Jobs {
-            jstr, _ := json.Marshal(job) // for error handling
-
-            err = this.fillJobAppointments (ctx, token, &job, job.Schedule.Start, job.Schedule.End)
-            if err == nil {
-                if len(job.AssignedEmployees) > 0 {
-                    ret = append (ret, job)
-                } // no error for no crew members, it's expected with appointments
-            } else {
-                log.Printf("%v : ListJobsFromCustomer : %s : %s :: %s\n", err, job.Id, customerId, string(jstr))
-            }
-        }
-        
-        if i >= resp.TotalPages { return ret, nil } // we finished
-    }
-    return ret, errors.Wrapf (ErrTooManyRecords, "received over %d jobs in your history", len(ret))
-}
-
-// gets the info about a specific job
-func (this *HouseCall) GetJob (ctx context.Context, token, jobId string) (*Job, error) {
-    header := make(map[string]string)
-    header["Authorization"] = "Bearer " + token 
-
-    job := &Job{}
-    
-    errObj, err := this.send (ctx, http.MethodGet, fmt.Sprintf("jobs/%s", jobId), header, nil, job)
-    if err != nil { return nil, errors.WithStack(err) } // bail
-    if errObj != nil { return nil, errObj.Err() } // something else bad
-
-    // see if there were appointments associated with this job
-    job.Appointments, err = this.GetJobAppointments (ctx, token, jobId)
-
-    // we're here, we're good
-    return job, nil
+    return ret, nil // we're good
 }
 
 // updates the target scheduled time for a job
@@ -281,102 +171,7 @@ func (this *HouseCall) UpdateJobSchedule (ctx context.Context, token, jobId stri
     return nil
 }
 
-// sets the list of all assigned employees for a job
-// only updates the list of employees assigned to a job
-func (this *HouseCall) UpdateJobDispatch (ctx context.Context, token, jobId string, employeeIds ...string) error {
-    header := make(map[string]string)
-    header["Authorization"] = "Bearer " + token 
-    
-    dispatch := &JobDispatch {}
-
-    // add in our employees
-    for _, id := range employeeIds {
-        dispatch.DispatchedEmployees = append (dispatch.DispatchedEmployees, DispatchedEmployee{id}) 
-    }
-
-    errObj, err := this.send (ctx, http.MethodPut, fmt.Sprintf("jobs/%s/dispatch", jobId), header, dispatch, nil)
-    if err != nil { return errors.WithStack(err) } // bail
-    if errObj != nil { 
-        if errObj.StatusCode != http.StatusGone {
-            return errObj.Err() // something else bad
-        } // otherwise we're good with this error here
-    }
-    
-    // we're here, we're good
-    return nil
-}
-
 //----- APPOINTMENTS
-// jobs can have appointments now...
-func (this *HouseCall) GetJobAppointments (ctx context.Context, token, jobId string) ([]Appointment, error) {
-
-    header := make(map[string]string)
-    header["Authorization"] = "Bearer " + token 
-
-    var resp struct {
-        Appointments []Appointment
-    }
-
-    errObj, err := this.send (ctx, http.MethodGet, fmt.Sprintf("jobs/%s/appointments", jobId), header, nil, &resp)
-    if err != nil { return nil, errors.WithStack(err) } // bail
-    if errObj != nil { return nil, errObj.Err() } // something else bad
-
-    // we're here, we're good
-    return resp.Appointments, nil
-}
-
-// for the most part we only want a specific appointment assigned to the job within the start/end times
-// this picks the first one
-func (this *HouseCall) fillJobAppointments (ctx context.Context, token string, job *Job, start, finish time.Time) error {
-    // 2023-10-16 don't get the appointments if they job isn't active.
-    if job.IsActive() == false && job.IsPending() == false { return nil } // we're done
-
-    // get a list of appointments
-    apps, err := this.GetJobAppointments (ctx, token, job.Id)
-    if err != nil { return err }
-
-    // find the first appointment that starts before the finish time and ends after the start time
-    for _, app := range apps {
-        if app.Start.Before(finish) && app.End.After(start) {
-            // this is in our window
-            job.Appointments = make([]Appointment, 1) // reset this list
-            job.Appointments[0] = app // this one wins
-
-            // i'm manually updating the status of this job, as the job has a single status, with multiple appointments
-            // which makes no sense
-            if len(apps) > 1 && app.Start.After(time.Now()) && job.IsActive() {
-                job.WorkStatus = WorkStatus_scheduled // go back to a scheduled state
-            }
-
-            // the arrival window for this appointment also updates the jobs one
-            job.Schedule.Window = app.Window
-            // as do the start and end times
-            job.Schedule.Start = app.Start 
-            job.Schedule.End = app.End 
-            
-            // make sure the assigned crew members match this single appointment
-            finalCrew := make([]Employee, 0)
-            for _, emp := range job.AssignedEmployees {
-                // make sure they're in this app list
-                for _, id := range app.AssignedEmployees {
-                    if emp.Id == id {
-                        // this emp is still assigned
-                        finalCrew = append(finalCrew, emp)
-                        break // just for speed
-                    }
-                }
-            }
-
-            // copy over this final crew list for the job
-            // IMPORTANT, this might be empty now! calling function needs to skip jobs with no assigned crew members
-            job.AssignedEmployees = finalCrew
-            return nil // we're good
-        }
-    }
-
-    // turns out this happens, and when it does we just use the existing job schedule and stuff
-    return nil 
-}
 
 // this is how we update the "new" setup for jobs where we have an appointment now
 // 2023-10-18 notifications don't work with this endpoint, HCP says they're working on that 

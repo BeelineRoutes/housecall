@@ -37,7 +37,7 @@ func (this *HouseCall) SearchCustomers (ctx context.Context, token, search strin
 
     var ret []Customer
 
-    for i := 1; i <= 10; i++ { // stay in a loop as long as we're pulling jobs
+    for i := 1; i <= 10; i++ { // stay in a loop as long as we're pulling customers, but put a limit
         params.Set("page", fmt.Sprintf("%d", i)) // set our next page
 
         resp := customerListResponse{}

@@ -402,8 +402,8 @@ type Job struct {
 		Start time.Time `json:"scheduled_start"`
 		End time.Time `json:"scheduled_end"`
 		Window int `json:"arrival_window"`
+		Appointments []Appointment `json:"appointments"`
 	}
-	Appointments []Appointment `json:"appointments"`
 	WorkTimestamps struct {
 		OnMyWay time.Time `json:"on_my_way_at"`
 		Started time.Time `json:"started_at"`
@@ -428,6 +428,64 @@ func (this *Job) IsActive () bool {
 		return true
 	}
 	return false // not an active job
+}
+
+func (this *Job) include (start, end time.Time) bool {
+	if len(this.AssignedEmployees) == 0 { return false }
+
+	if len(this.Schedule.Appointments) < 2 { return true } // we only have the 1 option
+
+	// ok, we need to figure out which appointment matters for this
+	for _, app := range this.Schedule.Appointments {
+		if app.Start.Before(start) { continue }
+		if app.End.After(end) { continue }
+
+		// this is our target
+		this.Schedule.Appointments = append(make([]Appointment, 0, 1), app)
+		break 
+	}
+
+	// the first, and hopefully only, appointment now wins fo the schedule
+	this.Schedule.Start = this.Schedule.Appointments[0].Start
+	this.Schedule.End = this.Schedule.Appointments[0].End
+	this.Schedule.Window = this.Schedule.Appointments[0].Window
+
+	// we want to make sure the work status makes sense for this appointment
+	// only thing we have to look for is when the on my way, or started, or completed timestamps are
+	if this.IsPending() == false {
+		// let's see if it's supposed to be pending
+		threshold := this.Schedule.Start.Add(time.Hour * -12)
+		if this.WorkTimestamps.Completed.After(threshold) ||
+			this.WorkTimestamps.Started.After(threshold) ||
+			this.WorkTimestamps.OnMyWay.After(threshold) {
+				// this status is correct, so keep it
+		} else {
+			// this was for another appointment, meaning our appointment is scheduled again
+			this.WorkStatus = WorkStatus_scheduled
+			this.WorkTimestamps.Completed = time.Time{} // clear these
+			this.WorkTimestamps.Started = time.Time{}
+			this.WorkTimestamps.OnMyWay = time.Time{}
+		}
+	}
+	
+	// now remove the crew that we shouldn't have
+	// we only want the crew members associated with this appointment
+	targetCrews := make(map[string]struct{})
+	for _, id := range this.Schedule.Appointments[0].AssignedEmployees {
+		targetCrews[id] = struct{}{} // this exists
+	}
+
+	// now find the ones we want
+	finalEmployees := make([]Employee, 0, 1)
+	for _, emp := range this.AssignedEmployees {
+		if _, ok := targetCrews[emp.Id]; ok {
+			finalEmployees = append (finalEmployees, emp)
+		}
+	}
+
+	this.AssignedEmployees = finalEmployees // just set the new slice
+
+	return true // let's just go with this
 }
 
 type DispatchedEmployee struct {
