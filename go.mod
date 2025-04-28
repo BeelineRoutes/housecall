@@ -1,4 +1,4 @@
-module github.com/BeelineRoutes/housecall
+module github.com/BeelineRoutes/housecall/v2
 
 go 1.16
 
