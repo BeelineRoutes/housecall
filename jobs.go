@@ -28,8 +28,8 @@ import (
 //-----------------------------------------------------------------------------------------------------------------------//
 
 // Returns a list of the jobs that are marked as "unscheduled".
-func (this *HouseCall) ListUnscheduledJobs (ctx context.Context, token string, pageLimit int) ([]Job, error) {
-    ret := make([]Job, 0) // main list to return
+func (this *HouseCall) ListUnscheduledJobs (ctx context.Context, token string, pageLimit int) ([]*Job, error) {
+    ret := make([]*Job, 0) // main list to return
     header := make(map[string]string)
     header["Authorization"] = "Bearer " + token 
 
@@ -61,8 +61,8 @@ func (this *HouseCall) ListUnscheduledJobs (ctx context.Context, token string, p
 }
 
 // returns all jobs that are within our start and finish ranges
-func (this *HouseCall) ListJobs (ctx context.Context, token string, start, finish time.Time) ([]Job, error) {
-    ret := make([]Job, 0) // main list to return
+func (this *HouseCall) ListJobs (ctx context.Context, token string, start, finish time.Time) ([]*Job, error) {
+    ret := make([]*Job, 0) // main list to return
     header := make(map[string]string)
     header["Authorization"] = "Bearer " + token 
 
@@ -73,7 +73,7 @@ func (this *HouseCall) ListJobs (ctx context.Context, token string, start, finis
     params.Set("scheduled_start_max", finish.Format(time.RFC3339))
     params.Set("expand[]", "appointments")
 
-    existingJobs := make(map[string]struct{})
+    existingApps := make(map[string]struct{})
     
     for i := 1; i <= 10; i++ { // stay in a loop as long as we're pulling jobs
         params.Set("page", fmt.Sprintf("%d", i)) // set our next page
@@ -85,9 +85,15 @@ func (this *HouseCall) ListJobs (ctx context.Context, token string, start, finis
 
         // we're here, we're good
         for _, job := range resp.Jobs {
-            if job.include (start, finish) {
-                ret = append (ret, job)
-                existingJobs[job.Id] = struct{}{}
+            for _, j := range expandJob (job, start, finish) {
+                
+                if len(j.Schedule.Appointments) > 0 {
+                    if _, exists := existingApps[j.Schedule.Appointments[0].Id]; exists { continue } // skip this one
+
+                    existingApps[j.Schedule.Appointments[0].Id] = struct{}{} // mark it for next time
+                }
+
+                ret = append (ret, j) // include this one
             }
         }
         
@@ -112,12 +118,15 @@ func (this *HouseCall) ListJobs (ctx context.Context, token string, start, finis
 
         // we're here, we're good
         for _, job := range resp.Jobs {
-            
-            // make sure this job doesn't already exist because we pulled it in above
-            if _, exists := existingJobs[job.Id]; exists { continue }
+            for _, j := range expandJob (job, start, finish) {
+                
+                if len(j.Schedule.Appointments) > 0 {
+                    if _, exists := existingApps[j.Schedule.Appointments[0].Id]; exists { continue } // skip this one
 
-            if job.include (start, finish) {
-                ret = append (ret, job)
+                    existingApps[j.Schedule.Appointments[0].Id] = struct{}{} // mark it for next time
+                }
+
+                ret = append (ret, j) // include this one
             }
         }
         
