@@ -27,6 +27,24 @@ import (
  //----- FUNCTIONS -------------------------------------------------------------------------------------------------------//
 //-----------------------------------------------------------------------------------------------------------------------//
 
+// gets the info about a specific job
+func (this *HouseCall) GetJob (ctx context.Context, token, jobId string) (*Job, error) {
+    header := make(map[string]string)
+    header["Authorization"] = "Bearer " + token 
+
+    params := url.Values{}
+    params.Set("expand[]", "appointments")
+
+    job := &Job{}
+    
+    errObj, err := this.send (ctx, http.MethodGet, fmt.Sprintf("jobs/%s", jobId), header, nil, job)
+    if err != nil { return nil, errors.WithStack(err) } // bail
+    if errObj != nil { return nil, errObj.Err() } // something else bad
+
+    // we're here, we're good
+    return job, nil
+}
+
 // Returns a list of the jobs that are marked as "unscheduled".
 func (this *HouseCall) ListUnscheduledJobs (ctx context.Context, token string, pageLimit int) ([]*Job, error) {
     ret := make([]*Job, 0) // main list to return
@@ -263,7 +281,8 @@ func (this *HouseCall) CreateJob (ctx context.Context, token, customerId, addres
     if errObj != nil { return nil, errObj.Err() } // something else bad
     
     // we're here, we're good
-    return resp, nil
+    // in order to know our new appointment, it appears like we have to make the request again to hcp
+    return this.GetJob (ctx, token, resp.Id)
 }
 
 // returns the line items associated with the job
