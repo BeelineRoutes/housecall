@@ -543,6 +543,13 @@ type createJob struct {
 	Notes string `json:"notes,omitempty"`
 }
 
+type createAppointment struct {
+	Start time.Time `json:"start_time"`
+	End time.Time `json:"end_time"`
+	Window int `json:"arrival_window_minutes"`
+	Employees []string `json:"dispatched_employees_ids"`
+}
+
 //----- ESTIMATES -------------------------------------------------------------------------------------------------------//
 
 type Estimate struct {

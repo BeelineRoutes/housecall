@@ -154,6 +154,32 @@ func (this *HouseCall) ListJobs (ctx context.Context, token string, start, finis
     return ret, nil // we're good
 }
 
+// returns a list of jobs that are associated with the customer
+func (this *HouseCall) ListJobsFromCustomer (ctx context.Context, token string, customerId string) ([]*Job, error) {
+    ret := make([]*Job, 0, 2) // main list to return
+    header := make(map[string]string)
+    header["Authorization"] = "Bearer " + token 
+
+    params := url.Values{}
+    params.Set("page_size", "200")
+    params.Set("sort_direction", "desc")
+    params.Set("customer_id", customerId)
+    
+    for i := 1; i <= 2; i++ { // i can't image there beeing that many jobs for a customer and if there is i don't care about # 401
+        params.Set("page", fmt.Sprintf("%d", i)) // set our next page
+        resp := jobListResponse{}
+        
+        errObj, err := this.send (ctx, http.MethodGet, fmt.Sprintf("jobs?%s", params.Encode()), header, nil, &resp)
+        if err != nil { return nil, errors.WithStack(err) } // bail
+        if errObj != nil { return nil, errObj.Err() } // something else bad
+
+        // we're here, we're good
+        ret = append (ret, resp.Jobs...)
+        if i >= resp.TotalPages { return ret, nil } // we finished
+    }
+    return ret, errors.Wrapf (ErrTooManyRecords, "received over %d jobs in your history", len(ret))
+}
+
 // updates the target scheduled time for a job
 // at least 1 employee is required for this
 // if startTime is zero, then this will remove the scheduled time from the job
@@ -283,6 +309,35 @@ func (this *HouseCall) CreateJob (ctx context.Context, token, customerId, addres
     // we're here, we're good
     // in order to know our new appointment, it appears like we have to make the request again to hcp
     return this.GetJob (ctx, token, resp.Id)
+}
+
+func (this *HouseCall) CreateAppointment (ctx context.Context, token, jobId string, startTime time.Time, 
+                                            duration, arrivalWindow time.Duration, employeeIds []string) (string, error) {
+    header := make(map[string]string)
+    header["Authorization"] = "Bearer " + token 
+    header["Content-Type"] = "application/json; charset=utf-8"
+    
+    app := &createAppointment {
+        Start: startTime,
+        End: startTime.Add (duration),
+        Window: int(arrivalWindow.Minutes()),
+    }
+
+    // add in our employee
+    for _, id := range employeeIds {
+        app.Employees = append (app.Employees, id) 
+    }
+    
+    var resp struct {
+        Id string
+    }
+    
+    errObj, err := this.send (ctx, http.MethodPost, fmt.Sprintf("jobs/%s/appointments", jobId), header, app, &resp)
+    if err != nil { return "", errors.WithStack(err) } // bail
+    if errObj != nil { return "", errObj.Err() } // something else bad
+    
+    // we're here, we're good
+    return resp.Id, nil
 }
 
 // returns the line items associated with the job
