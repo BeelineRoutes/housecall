@@ -536,9 +536,9 @@ type createJob struct {
 		End time.Time `json:"scheduled_end"`
 		Window string `json:"arrival_window"`
 	} `json:"schedule"`
-	LineItems []LineItem `json:"line_items"`
+	LineItems []LineItem `json:"line_items,omitempty"`
 	Employees []string `json:"assigned_employee_ids"`
-	Tags []string `json:"tags"`
+	Tags []string `json:"tags,omitempty"`
 	LeadSource string `json:"lead_source,omitempty"`
 	Notes string `json:"notes,omitempty"`
 }
