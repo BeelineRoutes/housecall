@@ -156,7 +156,7 @@ func (this *HouseCall) CreateEstimate (ctx context.Context, token, customerId, a
 
     est.Schedule.Start = startTime
     est.Schedule.End = startTime.Add (duration)
-    est.Schedule.Window = fmt.Sprintf ("%d", int(arrivalWindow.Minutes()))
+    est.Schedule.Window = int(arrivalWindow.Minutes())
     est.Schedule.NotifyCustomer = notifyCustomer
 
     resp := &Estimate{}

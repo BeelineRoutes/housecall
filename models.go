@@ -620,7 +620,7 @@ type createEstimate struct {
 	Schedule struct {
 		Start time.Time `json:"start_time"`
 		End time.Time `json:"end_time"`
-		Window string `json:"arrival_window_in_minutes"`
+		Window int `json:"arrival_window_in_minutes"`
 		NotifyCustomer bool `json:"notify_customer"`
 	} `json:"schedule"`
 	Employees []string `json:"assigned_employee_ids"`
