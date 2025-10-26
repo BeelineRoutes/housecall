@@ -7,7 +7,7 @@ import (
 	"testing"
 	"context"
 	"time"
-	"encoding/json"
+	// "encoding/json"
 )
 
 func TestThirdJobs (t *testing.T) {
@@ -39,7 +39,7 @@ func TestThirdFutureJobs (t *testing.T) {
 	defer cancel()
 
 	// get our list of jobs
-	jobs, err := hc.ListJobs (ctx, cfg.AccessToken, time.Now().AddDate(0, 0, 9), time.Now().AddDate (0, 0, 22))
+	jobs, err := hc.ListJobs (ctx, cfg.AccessToken, time.Now().AddDate(0, 0, 3), time.Now().AddDate (0, 0, 4))
 	if err != nil { t.Fatal (err) }
 
 	t.Logf("got %d jobs\n", len(jobs))
@@ -49,12 +49,12 @@ func TestThirdFutureJobs (t *testing.T) {
 	assert.NotEqual (t, "", jobs[0].Customer.Id, "not filled in")
 	assert.NotEqual (t, "", jobs[0].Address.Id, "not filled in")
 	
-	jstr, _ := json.Marshal(jobs)
-	t.Logf("%s\n", string(jstr))
+	// jstr, _ := json.Marshal(jobs)
+	// t.Logf("%s\n", string(jstr))
 	
-	// for _, j := range jobs {
-	// 	t.Logf ("%+v\n", j)
-	// }
+	for _, j := range jobs {
+		t.Logf ("%+v\n", j)
+	}
 	
 }
 

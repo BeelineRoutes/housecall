@@ -432,7 +432,8 @@ func (this *Job) IsActive () bool {
 
 // takes a single job and expands it into multiple for each appointment, if needed
 func expandJob (job *Job, start, end time.Time) (ret []*Job) {
-	if len(job.AssignedEmployees) == 0 { return nil } // don't include anything
+	// i think we want to include jobs with no assigned employee
+	// if len(job.AssignedEmployees) == 0 { return nil } // don't include anything
 
 	if len(job.Schedule.Appointments) < 2 { return append(ret, job) } // we only have the 1 option, so we're good
 

@@ -101,6 +101,9 @@ func (this *HouseCall) ListJobs (ctx context.Context, token string, start, finis
         if err != nil { return nil, errors.WithStack(err) } // bail
         if errObj != nil { return nil, errObj.Err() } // something else bad
 
+        // jstr, _ := json.Marshal(resp)
+        // fmt.Println(string(jstr))
+
         // we're here, we're good
         for _, job := range resp.Jobs {
             for _, j := range expandJob (job, start, finish) {
