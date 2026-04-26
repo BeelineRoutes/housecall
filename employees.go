@@ -39,7 +39,7 @@ func (this *HouseCall) ListEmployees (ctx context.Context, token string) ([]Empl
         
         errObj, err := this.send (ctx, http.MethodGet, fmt.Sprintf("employees?%s", params.Encode()), header, nil, &resp)
         if err != nil { return nil, errors.WithStack(err) } // bail
-        if errObj != nil { return nil, errObj.Err() } // something else bad
+        if errObj != nil { return nil, errObj.Err("") } // something else bad
 
         // we're here, we're good
         ret = append (ret, resp.Employees...) // add this to our list

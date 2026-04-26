@@ -99,7 +99,7 @@ func (this *Error) UnmarshalJSON (b []byte) error {
 	return nil 
 }
 
-func (this *Error) Err () error {
+func (this *Error) Err (additional string) error {
 	if this == nil { return nil } // no error
 	
 	if this.ErrMsg == "invalid_grant" { // this is for granting access based on the passed code
@@ -112,7 +112,7 @@ func (this *Error) Err () error {
 	
 	}
 	// just a default
-	return errors.Errorf ("HouseCall Error : %d : %s : %s", this.StatusCode, this.ErrMsg, this.Description)
+	return errors.Errorf ("HouseCall Error : %d : %s : %s : %s", this.StatusCode, this.ErrMsg, additional, this.Description)
 }
 
 //----- OAUTH ---------------------------------------------------------------------------------------------------------//

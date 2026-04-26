@@ -39,7 +39,7 @@ func (this *HouseCall) GetJob (ctx context.Context, token, jobId string) (*Job, 
     
     errObj, err := this.send (ctx, http.MethodGet, fmt.Sprintf("jobs/%s", jobId), header, nil, job)
     if err != nil { return nil, errors.WithStack(err) } // bail
-    if errObj != nil { return nil, errObj.Err() } // something else bad
+    if errObj != nil { return nil, errObj.Err(jobId) } // something else bad
 
     // we're here, we're good
     return job, nil
@@ -64,7 +64,7 @@ func (this *HouseCall) ListUnscheduledJobs (ctx context.Context, token string, p
         
         errObj, err := this.send (ctx, http.MethodGet, fmt.Sprintf("jobs?%s", params.Encode()), header, nil, &resp)
         if err != nil { return nil, errors.WithStack(err) } // bail
-        if errObj != nil { return nil, errObj.Err() } // something else bad
+        if errObj != nil { return nil, errObj.Err("") } // something else bad
 
         if resp.TotalPages > pageLimit {
             return nil, nil // we have too many pages and it would take too long to return them all, ~3 seconds per page request
@@ -99,7 +99,7 @@ func (this *HouseCall) ListJobs (ctx context.Context, token string, start, finis
         
         errObj, err := this.send (ctx, http.MethodGet, fmt.Sprintf("jobs?%s", params.Encode()), header, nil, &resp)
         if err != nil { return nil, errors.WithStack(err) } // bail
-        if errObj != nil { return nil, errObj.Err() } // something else bad
+        if errObj != nil { return nil, errObj.Err("") } // something else bad
 
         // jstr, _ := json.Marshal(resp)
         // fmt.Println(string(jstr))
@@ -135,7 +135,7 @@ func (this *HouseCall) ListJobs (ctx context.Context, token string, start, finis
         
         errObj, err := this.send (ctx, http.MethodGet, fmt.Sprintf("jobs?%s", params.Encode()), header, nil, &resp)
         if err != nil { return nil, errors.WithStack(err) } // bail
-        if errObj != nil { return nil, errObj.Err() } // something else bad
+        if errObj != nil { return nil, errObj.Err("") } // something else bad
 
         // we're here, we're good
         for _, job := range resp.Jobs {
@@ -174,7 +174,7 @@ func (this *HouseCall) ListJobsFromCustomer (ctx context.Context, token string, 
         
         errObj, err := this.send (ctx, http.MethodGet, fmt.Sprintf("jobs?%s", params.Encode()), header, nil, &resp)
         if err != nil { return nil, errors.WithStack(err) } // bail
-        if errObj != nil { return nil, errObj.Err() } // something else bad
+        if errObj != nil { return nil, errObj.Err(customerId) } // something else bad
 
         // we're here, we're good
         ret = append (ret, resp.Jobs...)
@@ -197,7 +197,7 @@ func (this *HouseCall) UpdateJobSchedule (ctx context.Context, token, jobId stri
         if err != nil { return errors.WithStack(err) } // bail
         if errObj != nil { 
             if errObj.StatusCode != http.StatusGone {
-                return errObj.Err() // something else bad
+                return errObj.Err(jobId) // something else bad
             } // otherwise we're good with this error here
         }
 
@@ -218,7 +218,7 @@ func (this *HouseCall) UpdateJobSchedule (ctx context.Context, token, jobId stri
         if err != nil { return errors.WithStack(err) } // bail
         if errObj != nil { 
             if errObj.StatusCode != http.StatusGone {
-                return errObj.Err() // something else bad
+                return errObj.Err(jobId) // something else bad
             } // otherwise we're good with this error here
         }
     }
@@ -262,16 +262,16 @@ func (this *HouseCall) UpdateJobAppointmentSchedule (ctx context.Context, token,
         // i'm also getting HouseCall Error : 400 : Archived job :
         // which happens when someone deletes the job and not just the appointment for the job
         // just going to hard code that string
-        if errObj.StatusCode == http.StatusBadRequest && strings.Contains (errObj.Err().Error(), "Archived job") {
+        if errObj.StatusCode == http.StatusBadRequest && strings.Contains (errObj.Err(jobId).Error(), "Archived job") {
             return nil // also ignore these errors
         }
         
         // otherwise we're good with this error here
-        return errObj.Err() // something else bad
+        return errObj.Err(jobId) // something else bad
     }
 
     if err != nil { return errors.WithStack(err) } // bail
-    if errObj != nil { return errObj.Err() } // something else bad
+    if errObj != nil { return errObj.Err(jobId) } // something else bad
 
     // we're here, we're good
     return nil
@@ -307,7 +307,7 @@ func (this *HouseCall) CreateJob (ctx context.Context, token, customerId, addres
     
     errObj, err := this.send (ctx, http.MethodPost, "jobs", header, job, resp)
     if err != nil { return nil, errors.WithStack(err) } // bail
-    if errObj != nil { return nil, errObj.Err() } // something else bad
+    if errObj != nil { return nil, errObj.Err(customerId) } // something else bad
     
     // we're here, we're good
     // in order to know our new appointment, it appears like we have to make the request again to hcp
@@ -337,7 +337,7 @@ func (this *HouseCall) CreateAppointment (ctx context.Context, token, jobId stri
     
     errObj, err := this.send (ctx, http.MethodPost, fmt.Sprintf("jobs/%s/appointments", jobId), header, app, &resp)
     if err != nil { return "", errors.WithStack(err) } // bail
-    if errObj != nil { return "", errObj.Err() } // something else bad
+    if errObj != nil { return "", errObj.Err(jobId) } // something else bad
     
     // we're here, we're good
     return resp.Id, nil
@@ -355,7 +355,7 @@ func (this *HouseCall) GetLineItems (ctx context.Context, token, jobId string) (
     
     errObj, err := this.send (ctx, http.MethodGet, fmt.Sprintf("jobs/%s/line_items", jobId), header, nil, &ret)
     if err != nil { return nil, errors.WithStack(err) } // bail
-    if errObj != nil { return nil, errObj.Err() } // something else bad
+    if errObj != nil { return nil, errObj.Err(jobId) } // something else bad
 
     // we're here, we're good
     return ret.Data, nil

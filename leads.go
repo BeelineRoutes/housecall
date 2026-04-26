@@ -47,7 +47,7 @@ func (this *HouseCall) ListLeads (ctx context.Context, token string) ([]*LeadSou
         
         errObj, err := this.send (ctx, http.MethodGet, fmt.Sprintf("lead_sources?%s", params.Encode()), header, nil, resp)
         if err != nil { return nil, errors.WithStack(err) } // bail
-        if errObj != nil { return nil, errObj.Err() } // something else bad
+        if errObj != nil { return nil, errObj.Err("") } // something else bad
 
         // we're here, we're good
         ret = append(ret, resp.Lead_sources...)

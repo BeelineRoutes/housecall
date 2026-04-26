@@ -46,7 +46,7 @@ func (this *HouseCall) TokensFromCode (ctx context.Context, code string) (*Oauth
     errObj, err := this.send (ctx, http.MethodPost, "oauth/token", header, req, resp)
     if err != nil { return nil, err } // bail
 
-    return resp, errObj.Err() // if errObj is nil, this will return a nil error
+    return resp, errObj.Err(code) // if errObj is nil, this will return a nil error
 }
 
 // Gets new tokens using a previously retreived refresh token
@@ -65,5 +65,5 @@ func (this *HouseCall) TokensFromRefresh (ctx context.Context, refresh string) (
     errObj, err := this.send (ctx, http.MethodPost, "oauth/token", header, req, resp)
     if err != nil { return nil, err } // bail
 
-    return resp, errObj.Err() // if errObj is nil, this will return a nil error
+    return resp, errObj.Err(refresh) // if errObj is nil, this will return a nil error
 }

@@ -44,7 +44,7 @@ func (this *HouseCall) SearchCustomers (ctx context.Context, token, search strin
     
         errObj, err := this.send (ctx, http.MethodGet, fmt.Sprintf("customers?%s", params.Encode()), header, nil, &resp)
         if err != nil { return nil, errors.WithStack(err) } // bail
-        if errObj != nil { return nil, errObj.Err() } // something else bad
+        if errObj != nil { return nil, errObj.Err(search) } // something else bad
 
         // we're here, we're good
         ret = append (ret, resp.Customers...)
@@ -75,7 +75,7 @@ func (this *HouseCall) PageCustomers (ctx context.Context, token string, page in
 
     errObj, err := this.send (ctx, http.MethodGet, fmt.Sprintf("customers?%s", params.Encode()), header, nil, &resp)
     if err != nil { return nil, errors.WithStack(err) } // bail
-    if errObj != nil { return nil, errObj.Err() } // something else bad
+    if errObj != nil { return nil, errObj.Err("") } // something else bad
 
     return resp.Customers, nil 
 }
@@ -91,7 +91,7 @@ func (this *HouseCall) CreateCustomer (ctx context.Context, token string, custom
 
     errObj, err := this.send (ctx, http.MethodPost, "customers", header, customer, resp)
     if err != nil { return errors.WithStack(err) } // bail
-    if errObj != nil { return errObj.Err() } // something else bad
+    if errObj != nil { return errObj.Err("") } // something else bad
 
     // return a shallow copy of this new user, we really just want the id
     *customer = *resp 

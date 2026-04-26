@@ -44,7 +44,7 @@ func (this *HouseCall) ListUnscheduledEstimates (ctx context.Context, token stri
         
         errObj, err := this.send (ctx, http.MethodGet, fmt.Sprintf("estimates?%s", params.Encode()), header, nil, &resp)
         if err != nil { return nil, errors.WithStack(err) } // bail
-        if errObj != nil { return nil, errObj.Err() } // something else bad
+        if errObj != nil { return nil, errObj.Err("") } // something else bad
 
         // see if we have too many
         if resp.TotalPages > pageLimit {
@@ -80,7 +80,7 @@ func (this *HouseCall) ListEstimates (ctx context.Context, token string, employe
         
         errObj, err := this.send (ctx, http.MethodGet, fmt.Sprintf("estimates?%s", params.Encode()), header, nil, &resp)
         if err != nil { return nil, errors.WithStack(err) } // bail
-        if errObj != nil { return nil, errObj.Err() } // something else bad
+        if errObj != nil { return nil, errObj.Err(employeeId) } // something else bad
 
         // we're here, we're good
         ret = append (ret, resp.Estimates...)
@@ -99,7 +99,7 @@ func (this *HouseCall) GetEstimate (ctx context.Context, token, estId string) (*
     
     errObj, err := this.send (ctx, http.MethodGet, fmt.Sprintf("estimates/%s", estId), header, nil, est)
     if err != nil { return nil, errors.WithStack(err) } // bail
-    if errObj != nil { return nil, errObj.Err() } // something else bad
+    if errObj != nil { return nil, errObj.Err(estId) } // something else bad
 
     // we're here, we're good
     return est, nil
@@ -128,7 +128,7 @@ func (this *HouseCall) UpdateEstimateSchedule (ctx context.Context, token, estId
 
     errObj, err := this.send (ctx, http.MethodPut, fmt.Sprintf("estimates/%s/options/%s/schedule", estId, optionId), header, schedule, nil)
     if err != nil { return errors.WithStack(err) } // bail
-    if errObj != nil { return errObj.Err() } // something else bad
+    if errObj != nil { return errObj.Err(estId + ":" + optionId) } // something else bad
     
     // we're here, we're good
     return nil
@@ -163,7 +163,7 @@ func (this *HouseCall) CreateEstimate (ctx context.Context, token, customerId, a
     
     errObj, err := this.send (ctx, http.MethodPost, "estimates", header, est, resp)
     if err != nil { return nil, errors.WithStack(err) } // bail
-    if errObj != nil { return nil, errObj.Err() } // something else bad
+    if errObj != nil { return nil, errObj.Err(customerId) } // something else bad
     
     // we're here, we're good
     return resp, nil
