@@ -311,8 +311,8 @@ type Address struct {
 	State string `json:"state"`
 	Zip string `json:"zip"`
 	Country string `json:"country"`
-	Latitude string `json:"latitude"`
-	Longitude string `json:"longitude"`
+	Latitude float64 `json:"latitude"`
+	Longitude float64 `json:"longitude"`
 }
 
 // this became the most complicated thing, but just trying to return an empty string when appropriate 
