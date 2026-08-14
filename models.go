@@ -148,7 +148,7 @@ type Company struct {
 	Email string `json:"support_email"`
 	Name string `json:"name"`
 	Logo string `json:"logo_url"`
-	Address Address `json:"address"`
+	Address AddressString `json:"address"`
 	Website string `json:"website"`
 	DefaultArrivalWindow int `json:"default_arrival_window"`
 	TimeZone string `json:"time_zone"`
@@ -349,6 +349,19 @@ func (this Address) ToString() string {
 		return afterComma
 	}
 	return "" // nothing do'n
+}
+
+type AddressString struct {
+	Id string `json:"id"`
+	Type string `json:"type"`
+	Street string `json:"street"`
+	Street2 string `json:"street_line_2"`
+	City string `json:"city"`
+	State string `json:"state"`
+	Zip string `json:"zip"`
+	Country string `json:"country"`
+	Latitude string `json:"latitude"`
+	Longitude string `json:"longitude"`
 }
 
 //----- CUSTOMERS ---------------------------------------------------------------------------------------------------------//
