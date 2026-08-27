@@ -67,10 +67,6 @@ func (this *HouseCall) ListUnscheduledJobs (ctx context.Context, token string, p
         if err != nil { return nil, errors.WithStack(err) } // bail
         if errObj != nil { return nil, errObj.Err("") } // something else bad
 
-        if resp.TotalPages > pageLimit {
-            return nil, nil // we have too many pages and it would take too long to return them all, ~3 seconds per page request
-        }
-
         // we're here, we're good
         ret = append (ret, resp.Jobs...)
 
