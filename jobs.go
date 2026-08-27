@@ -55,6 +55,7 @@ func (this *HouseCall) ListUnscheduledJobs (ctx context.Context, token string, p
     params.Set("page_size", "200")
     params.Set("work_status[]", "unscheduled")
     params.Set("sort_direction", "desc")
+    params.Set("sort_by", "created_at")
 
     if pageLimit == 0 { pageLimit = 1 } // just to make it work
     
