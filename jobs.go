@@ -17,6 +17,8 @@ import (
     "context"
     "time"
     "strings"
+    "log/slog"
+    "encoding/json"
 )
 
   //-----------------------------------------------------------------------------------------------------------------------//
@@ -184,7 +186,7 @@ func (this *HouseCall) ListJobsFromCustomer (ctx context.Context, token string, 
 // at least 1 employee is required for this
 // if startTime is zero, then this will remove the scheduled time from the job
 func (this *HouseCall) UpdateJobSchedule (ctx context.Context, token, jobId string, employeeIds []string, startTime time.Time, 
-                                            duration, arrivalWindow time.Duration, notifyCustomer bool) error {
+                                            duration, arrivalWindow time.Duration, notifyCustomer, debugFlag bool) error {
 
     header := make(map[string]string)
     header["Authorization"] = "Bearer " + token 
@@ -211,6 +213,11 @@ func (this *HouseCall) UpdateJobSchedule (ctx context.Context, token, jobId stri
             schedule.DispatchedEmployees = append (schedule.DispatchedEmployees, DispatchedEmployee{id}) 
         }
 
+        if debugFlag {
+            jstr, _ := json.Marshal(schedule)
+            slog.Info("UpdateJobSchedule Debug", "jobId", jobId, "header", header, "url", fmt.Sprintf("jobs/%s/schedule", jobId), "schedule", string(jstr))
+        }
+
         errObj, err := this.send (ctx, http.MethodPut, fmt.Sprintf("jobs/%s/schedule", jobId), header, schedule, nil)
         if err != nil { return errors.WithStack(err) } // bail
         if errObj != nil { 
@@ -229,7 +236,7 @@ func (this *HouseCall) UpdateJobSchedule (ctx context.Context, token, jobId stri
 // this is how we update the "new" setup for jobs where we have an appointment now
 // 2023-10-18 notifications don't work with this endpoint, HCP says they're working on that 
 func (this *HouseCall) UpdateJobAppointmentSchedule (ctx context.Context, token, jobId, apptId string, employeeIds []string, startTime time.Time, 
-                                                        duration, arrivalWindow time.Duration, notifyCustomer bool) error {
+                                                        duration, arrivalWindow time.Duration, notifyCustomer, debugFlag bool) error {
 
     header := make(map[string]string)
     header["Authorization"] = "Bearer " + token 
@@ -248,6 +255,11 @@ func (this *HouseCall) UpdateJobAppointmentSchedule (ctx context.Context, token,
     req.Window = int(arrivalWindow.Minutes())
     req.DispatchedEmployees = employeeIds
     req.Notify = notifyCustomer
+
+    if debugFlag {
+        jstr, _ := json.Marshal(req)
+        slog.Info("UpdateJobSchedule Debug", "jobId", jobId, "apptId", apptId, "header", header, "url", fmt.Sprintf("jobs/%s/appointments/%s", jobId, apptId), "req", string(jstr))
+    }
     
     errObj, err := this.send (ctx, http.MethodPut, fmt.Sprintf("jobs/%s/appointments/%s", jobId, apptId), header, req, nil)
     if err != nil { return errors.WithStack(err) } // bail
